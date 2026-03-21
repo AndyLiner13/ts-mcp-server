@@ -1,0 +1,59 @@
+{
+  "name": "ts-mcp-server",
+  "version": "1.0.2",
+  "description": "MCP server that renames/moves TypeScript files and updates all imports via tsserver",
+  "type": "module",
+  "bin": {
+    "ts-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prepublishOnly": "tsc"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "typescript",
+    "javascript",
+    "react",
+    "tsx",
+    "jsx",
+    "refactor",
+    "refactoring",
+    "rename",
+    "move-file",
+    "import-update",
+    "tsserver",
+    "language-server",
+    "code-automation",
+    "ai-tools",
+    "copilot",
+    "claude",
+    "cursor"
+  ],
+  "license": "MIT",
+  "author": "AndyLiner13",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AndyLiner13/ts-mcp-server.git"
+  },
+  "homepage": "https://github.com/AndyLiner13/ts-mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/AndyLiner13/ts-mcp-server/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "typescript": "^5"
+  },
+  "devDependencies": {
+    "@types/node": "^22"
+  }
+}
