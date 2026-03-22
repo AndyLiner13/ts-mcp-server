@@ -14,10 +14,12 @@ AI coding assistants can read and write code, but they struggle with **structura
 
 ## Features
 
-- **10 tools** — each a 1:1 mapping to a native `tsserver` protocol command
+- **12 tools** — each a 1:1 mapping to a native `tsserver` protocol command
 - **Rename symbols** — variables, functions, classes, types, properties, interfaces, enums — all references updated across every file
 - **Extract function** — extract a code range into a new function with auto-detected parameters and return type
 - **Extract constant** — extract an expression into a named constant with inferred type
+- **Extract type** — extract an inline type annotation into a named type alias
+- **Infer return type** — add an explicit return type annotation to a function, inferred by TypeScript
 - **Move symbol** — move top-level declarations to another file, all imports rewired automatically
 - **Inline variable** — replace all references with the variable's initializer and delete the declaration
 - **Organize imports** — sort, coalesce, and remove unused imports
@@ -48,6 +50,8 @@ Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over N
 | `get_code_fixes`      | `getCodeFixes`                                          |
 | `extract_function`    | `getEditsForRefactor-full`                              |
 | `extract_constant`    | `getEditsForRefactor-full`                              |
+| `extract_type`        | `getEditsForRefactor-full`                              |
+| `infer_return_type`   | `getEditsForRefactor-full`                              |
 | `move_symbol`         | `getEditsForRefactor-full`                              |
 | `inline_variable`     | `getEditsForRefactor-full`                              |
 
@@ -318,6 +322,58 @@ inline_variable  file="src/app.ts"  line=12  offset=7
 
 # Preview the inlining
 inline_variable  file="src/app.ts"  line=12  offset=7  preview=true
+```
+
+---
+
+### `extract_type`
+
+Extract an inline type annotation into a named type alias. Select the type span to extract. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename_symbol` to give the type a meaningful name.
+
+| Parameter     | Type      | Required | Description                                                  |
+| ------------- | --------- | -------- | ------------------------------------------------------------ |
+| `file`        | `string`  | ✅       | File path (absolute or relative to cwd)                      |
+| `startLine`   | `number`  | ✅       | 1-based start line of the type span                          |
+| `startOffset` | `number`  | ✅       | 1-based start character offset                               |
+| `endLine`     | `number`  | ✅       | 1-based end line of the type span                            |
+| `endOffset`   | `number`  | ✅       | 1-based end character offset                                 |
+| `preview`     | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+
+**Examples:**
+
+```
+# Extract an inline object type into a type alias
+# Given: function process(user: { id: number; name: string }) { ... }
+# Select the span "{ id: number; name: string }"
+extract_type  file="src/app.ts"  startLine=5  startOffset=26  endLine=5  endOffset=56
+
+# Preview the extraction
+extract_type  file="src/app.ts"  startLine=5  startOffset=26  endLine=5  endOffset=56  preview=true
+```
+
+---
+
+### `infer_return_type`
+
+Add an explicit return type annotation to a function, inferred by TypeScript. Position must be on the function name or declaration keyword (`function`, `async`, arrow function variable name).
+
+| Parameter | Type      | Required | Description                                                  |
+| --------- | --------- | -------- | ------------------------------------------------------------ |
+| `file`    | `string`  | ✅       | File path (absolute or relative to cwd)                      |
+| `line`    | `number`  | ✅       | 1-based line number of the function                          |
+| `offset`  | `number`  | ✅       | 1-based character offset on the line                         |
+| `preview` | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+
+**Examples:**
+
+```
+# Add return type to a function that currently has none
+# Given: function greet(name: string) { return `Hello, ${name}!`; }
+# After: function greet(name: string): string { return `Hello, ${name}!`; }
+infer_return_type  file="src/app.ts"  line=10  offset=10
+
+# Preview the change
+infer_return_type  file="src/app.ts"  line=10  offset=10  preview=true
 ```
 
 ## Supported Languages & Frameworks
