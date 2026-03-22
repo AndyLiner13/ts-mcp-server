@@ -1,6 +1,6 @@
 {
   "name": "ts-mcp-server",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "MCP server that renames/moves TypeScript files and updates all imports via tsserver",
   "type": "module",
   "bin": {
@@ -14,7 +14,8 @@
     "lint": "eslint index.ts tsserver.ts tools/",
     "start": "node dist/index.js",
     "prepublishOnly": "tsc",
-    "publish:npm": "npm publish --access public"
+    "publish": "npm publish --access public",
+    "patch": "npm version patch && npm publish --access public"
   },
   "keywords": [
     "mcp",
