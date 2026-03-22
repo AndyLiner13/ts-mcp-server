@@ -39,25 +39,11 @@ export function register(server: McpServer): void {
           offset,
         });
 
-        const grouped = Map.groupBy(
-          body.refs,
-          (ref: ts.server.protocol.ReferencesResponseItem): string => ref.file,
-        );
-
-        const sections: string[] = [];
-        for (const [refFile, refs] of grouped) {
-          const lines: string[] = (refs ?? []).map(
-            (ref): string =>
-              `  ${ref.start.line}:${ref.start.offset}${ref.isDefinition ? " (definition)" : ""}${ref.isWriteAccess ? " (write)" : ""}${ref.lineText ? ` — ${ref.lineText.trim()}` : ""}`,
-          );
-          sections.push(`${refFile}\n${lines.join("\n")}`);
-        }
-
         return {
           content: [
             {
               type: "text",
-              text: `"${body.symbolName}" — ${body.refs.length} reference(s) across ${grouped.size} file(s):\n\n${sections.join("\n\n")}`,
+              text: JSON.stringify(body),
             },
           ],
         };

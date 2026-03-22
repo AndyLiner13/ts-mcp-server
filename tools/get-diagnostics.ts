@@ -39,18 +39,11 @@ export function register(server: McpServer): void {
           }),
         ]);
 
-        const all = [...semantic, ...suggestion];
-
-        const lines: string[] = all.map(
-          (d): string =>
-            `${d.category}${d.code ? ` TS${d.code}` : ""} [${d.start.line}:${d.start.offset}–${d.end.line}:${d.end.offset}]: ${d.text}`,
-        );
-
         return {
           content: [
             {
               type: "text",
-              text: `${all.length} diagnostic(s):\n\n${lines.join("\n")}`,
+              text: JSON.stringify({ semantic, suggestion }),
             },
           ],
         };

@@ -61,15 +61,11 @@ export function register(server: McpServer): void {
         >("renameLocations-full", { file: filePath, line, offset });
 
         if (preview) {
-          const byFile = Map.groupBy(
-            locations,
-            (loc: ts.RenameLocation): string => loc.fileName,
-          );
           return {
             content: [
               {
                 type: "text",
-                text: `Would rename "${info.displayName}" → "${newName}": ${locations.length} occurrence(s) across ${byFile.size} file(s).`,
+                text: JSON.stringify({ info, locations }),
               },
             ],
           };
@@ -99,7 +95,7 @@ export function register(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Done. Renamed "${info.displayName}" → "${newName}". Updated ${locations.length} occurrence(s) across ${updated.length} file(s).`,
+              text: JSON.stringify({ info, locations, updatedFiles: updated }),
             },
           ],
         };

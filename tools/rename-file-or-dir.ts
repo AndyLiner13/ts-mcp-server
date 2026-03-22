@@ -52,15 +52,11 @@ export function register(server: McpServer): void {
         });
 
         if (preview) {
-          const total = edits.reduce((n, e) => n + e.textChanges.length, 0);
           return {
             content: [
               {
                 type: "text",
-                text:
-                  total === 0 ?
-                    "No import updates needed."
-                  : `Would update ${total} import(s) across ${edits.filter((e) => e.textChanges.length > 0).length} file(s).`,
+                text: JSON.stringify(edits),
               },
             ],
           };
@@ -70,15 +66,11 @@ export function register(server: McpServer): void {
         mkdirSync(dirname(newPath), { recursive: true });
         renameSync(oldPath, newPath);
 
-        const what: string = isDir ? "folder" : "file";
         return {
           content: [
             {
               type: "text",
-              text:
-                updated.length > 0 ?
-                  `Done. Renamed ${what}. Updated imports in ${updated.length} file(s).`
-                : `Done. Renamed ${what}. No import updates needed.`,
+              text: JSON.stringify({ edits, updatedFiles: updated }),
             },
           ],
         };
