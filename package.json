@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "lint": "eslint index.ts",
+    "lint": "eslint index.ts tsserver.ts tools/",
     "start": "node dist/index.js",
     "prepublishOnly": "tsc"
   },

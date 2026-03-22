@@ -10,6 +10,6 @@
     "skipLibCheck": true,
     "declaration": true
   },
-  "include": ["index.ts"],
+  "include": ["index.ts", "tsserver.ts", "tools/**/*.ts"],
   "exclude": ["node_modules", "dist", "mcp-refactor-typescript"]
 }
