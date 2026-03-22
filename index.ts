@@ -2,6 +2,8 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { register as findAllReferences } from "./tools/find-all-references.js";
+import { register as getDiagnostics } from "./tools/get-diagnostics.js";
 import { register as renameFileOrDir } from "./tools/rename-file-or-dir.js";
 import { register as renameSymbol } from "./tools/rename-symbol.js";
 
@@ -12,6 +14,8 @@ const server = new McpServer({
 
 renameFileOrDir(server);
 renameSymbol(server);
+getDiagnostics(server);
+findAllReferences(server);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
