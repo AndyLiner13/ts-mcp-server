@@ -4,16 +4,17 @@
 [![npm downloads](https://img.shields.io/npm/dm/ts-mcp-server)](https://www.npmjs.com/package/ts-mcp-server)
 [![license](https://img.shields.io/npm/l/ts-mcp-server)](./LICENSE)
 
-A lightweight [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for **TypeScript and JavaScript refactoring**. Rename or move files and folders across your codebase and have every `import`, `require`, and re-export updated automatically — powered by the same TypeScript language service that drives VS Code.
+A lightweight [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for **TypeScript and JavaScript refactoring**. Rename symbols, move files, reorganize folders — and have every `import`, `require`, re-export, and reference updated automatically across your entire codebase. Powered by the native TypeScripe compiler.
 
 ## Why
 
-AI coding assistants can read and write code, but they struggle with **structural changes** that ripple across many files. Moving a React component, renaming a utility module, or reorganizing a folder means updating every import that references it. Miss one and the build breaks.
+AI coding assistants can read and write code, but they struggle with **structural changes** that ripple across many files. Renaming a function, moving a React component, or reorganizing a folder means updating every reference and import that touches it. Miss one and the build breaks.
 
 `ts-mcp-server` gives any MCP-compatible client — [VS Code Copilot](https://code.visualstudio.com/), [Claude Desktop](https://claude.ai/), [Cursor](https://cursor.sh/), [Windsurf](https://codeium.com/windsurf), [Continue](https://continue.dev/), and others — the ability to perform these refactors **correctly and completely**, using TypeScript's own compiler infrastructure.
 
 ## Features
 
+- **Rename symbols** — variables, functions, classes, types, properties, interfaces, enums — all references updated across every file
 - **Rename / move files** — `.ts`, `.tsx`, `.js`, `.jsx`, `.mts`, `.cts`, `.mjs`, `.cjs`
 - **Rename / move folders** — all imports referencing files inside the folder are updated
 - **Automatic project discovery** — `tsconfig.json` is detected automatically; no configuration needed
@@ -23,7 +24,10 @@ AI coding assistants can read and write code, but they struggle with **structura
 
 ## How It Works
 
-Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over Node IPC. When you rename a file or folder, it calls [`getEditsForFileRename`](https://github.com/microsoft/TypeScript/wiki/Standalone-Server-%28tsserver%29) — the same API that VS Code uses — to compute every import path that needs updating, applies the edits to disk, then moves the file or folder.
+Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over Node IPC — the same protocol that VS Code uses.
+
+- **Symbol renames** use `rename` + `renameLocations` to find every reference to a symbol across the project, then apply text edits to each file.
+- **File/folder renames** use `getEditsForFileRename` to compute every import path that needs updating, apply the edits to disk, then move the file or folder.
 
 There is no regex, no custom path resolution, no heuristics. The TypeScript compiler does all the work.
 
@@ -68,6 +72,34 @@ Add `ts-mcp-server` to your client's MCP configuration.
 **Cursor, Windsurf, Continue** — follow each client's MCP server documentation using the same `npx ts-mcp-server` command.
 
 ## Tool Reference
+
+### `rename_symbol`
+
+Rename a TypeScript/JavaScript symbol and update all references across the project.
+
+| Parameter | Type      | Required | Description                                                                                   |
+| --------- | --------- | -------- | --------------------------------------------------------------------------------------------- |
+| `file`    | `string`  | ✅       | File path containing the symbol (absolute or relative to cwd)                                 |
+| `line`    | `number`  | ✅       | 1-based line number where the symbol appears                                                  |
+| `offset`  | `number`  | ✅       | 1-based character offset on the line                                                          |
+| `newName` | `string`  | ✅       | New name for the symbol                                                                       |
+| `preview` | `boolean` | —        | If `true`, returns a summary of what would change without applying anything. Default: `false` |
+
+**Examples:**
+
+```
+# Rename a function
+rename_symbol  file="src/utils/helpers.ts"  line=5  offset=17  newName="formatCurrency"
+
+# Rename a React component
+rename_symbol  file="src/components/Button.tsx"  line=10  offset=17  newName="PrimaryButton"
+
+# Rename an interface
+rename_symbol  file="src/types.ts"  line=3  offset=11  newName="UserProfile"
+
+# Preview changes without applying
+rename_symbol  file="src/utils/helpers.ts"  line=5  offset=17  newName="formatCurrency"  preview=true
+```
 
 ### `rename_file_or_dir`
 
