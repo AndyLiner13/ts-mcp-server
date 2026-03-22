@@ -90,7 +90,7 @@ export function register(server: McpServer): void {
           }),
         );
 
-        const updated = await writeEdits(edits, filePath);
+        const updated = await writeEdits(edits);
         return {
           content: [
             {

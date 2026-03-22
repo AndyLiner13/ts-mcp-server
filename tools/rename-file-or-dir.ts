@@ -62,7 +62,7 @@ export function register(server: McpServer): void {
           };
         }
 
-        const updated = await writeEdits(edits, fileToOpen);
+        const updated = await writeEdits(edits);
         mkdirSync(dirname(newPath), { recursive: true });
         renameSync(oldPath, newPath);
 

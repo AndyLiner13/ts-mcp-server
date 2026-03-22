@@ -81,23 +81,28 @@ export function open(file: string): Promise<undefined> {
 
 export async function writeEdits(
   edits: readonly ts.FileTextChanges[],
-  openedFile: string,
 ): Promise<string[]> {
   const updated: string[] = [];
   for (const edit of edits) {
     if (edit.textChanges.length === 0) continue;
-    const original: string = readFileSync(edit.fileName, "utf-8");
-    writeFileSync(
-      edit.fileName,
-      applyChanges(original, edit.textChanges),
-      "utf-8",
-    );
+    if (edit.isNewFile) {
+      const content = edit.textChanges.map((c) => c.newText).join("");
+      writeFileSync(edit.fileName, content, "utf-8");
+    } else {
+      const original: string = readFileSync(edit.fileName, "utf-8");
+      writeFileSync(
+        edit.fileName,
+        applyChanges(original, edit.textChanges),
+        "utf-8",
+      );
+    }
     updated.push(edit.fileName);
   }
-  if (updated.length > 0) {
+  // Reload every modified file so tsserver's in-memory state stays current
+  for (const file of updated) {
     await send<undefined, ts.server.protocol.ReloadRequestArgs>(
       ts.server.protocol.CommandTypes.Reload,
-      { file: openedFile, tmpfile: openedFile },
+      { file, tmpfile: file },
     );
   }
   return updated;
@@ -134,7 +139,7 @@ export async function applyRefactor(
       };
     }
 
-    const updated = await writeEdits(result.edits, args.file);
+    const updated = await writeEdits(result.edits);
     return {
       content: [
         {
