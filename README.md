@@ -4,36 +4,54 @@
 [![npm downloads](https://img.shields.io/npm/dm/ts-mcp-server)](https://www.npmjs.com/package/ts-mcp-server)
 [![license](https://img.shields.io/npm/l/ts-mcp-server)](./LICENSE)
 
-A lightweight [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for **TypeScript and JavaScript refactoring**. Rename symbols, move files, reorganize folders, find references, get diagnostics — and have every `import`, `require`, re-export, and reference updated automatically across your entire codebase. Powered by the native TypeScript compiler.
+A lightweight [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for **TypeScript and JavaScript refactoring**. Every tool maps directly to a `tsserver` protocol command — the output is the raw, unmodified response from TypeScript's compiler. Rename symbols, extract functions, move declarations between files, reorganize imports, get diagnostics, find references, and more — with every `import`, `require`, re-export, and reference updated automatically across your entire codebase.
 
 ## Why
 
-AI coding assistants can read and write code, but they struggle with **structural changes** that ripple across many files. Renaming a function, moving a React component, or reorganizing a folder means updating every reference and import that touches it. Miss one and the build breaks.
+AI coding assistants can read and write code, but they struggle with **structural changes** that ripple across many files. Renaming a function, extracting a helper, moving a React component, or reorganizing a folder means updating every reference and import that touches it. Miss one and the build breaks.
 
 `ts-mcp-server` gives any MCP-compatible client — [VS Code Copilot](https://code.visualstudio.com/), [Claude Desktop](https://claude.ai/), [Cursor](https://cursor.sh/), [Windsurf](https://codeium.com/windsurf), [Continue](https://continue.dev/), and others — the ability to perform these refactors **correctly and completely**, using TypeScript's own compiler infrastructure.
 
 ## Features
 
+- **10 tools** — each a 1:1 mapping to a native `tsserver` protocol command
 - **Rename symbols** — variables, functions, classes, types, properties, interfaces, enums — all references updated across every file
-- **Find all references** — locate every usage of a symbol across the project, grouped by file with line context
+- **Extract function** — extract a code range into a new function with auto-detected parameters and return type
+- **Extract constant** — extract an expression into a named constant with inferred type
+- **Move symbol** — move top-level declarations to another file, all imports rewired automatically
+- **Inline variable** — replace all references with the variable's initializer and delete the declaration
+- **Organize imports** — sort, coalesce, and remove unused imports
+- **Get code fixes** — retrieve available auto-fixes for specific diagnostics (missing imports, type mismatches, etc.)
 - **Get diagnostics** — retrieve type errors, warnings, and suggestions for any file
-- **Rename / move files** — `.ts`, `.tsx`, `.js`, `.jsx`, `.mts`, `.cts`, `.mjs`, `.cjs`
-- **Rename / move folders** — all imports referencing files inside the folder are updated
+- **Find all references** — locate every usage of a symbol across the project
+- **Rename / move files and folders** — all import paths updated automatically
+- **Pure tsserver output** — every tool returns the raw, unmodified `tsserver` response as JSON
+- **Preview mode** — see exactly what would change before applying anything
 - **Automatic project discovery** — `tsconfig.json` is detected automatically; no configuration needed
 - **Multi-project support** — monorepos, project references, and composite builds work out of the box
-- **Preview mode** — see exactly what would change before applying anything
 - **Cross-platform** — Windows, macOS, and Linux
 
 ## How It Works
 
-Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over Node IPC — the same protocol that VS Code uses.
+Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over Node IPC — the same protocol that VS Code uses. Every tool is a thin wrapper that:
 
-- **Symbol renames** use `rename` + `renameLocations` to find every reference to a symbol across the project, then apply text edits to each file.
-- **File/folder renames** use `getEditsForFileRename` to compute every import path that needs updating, apply the edits to disk, then move the file or folder.
-- **Find references** uses `references` to return every usage of a symbol, grouped by file.
-- **Diagnostics** use `semanticDiagnosticsSync` + `suggestionDiagnosticsSync` to fetch type errors, warnings, and suggestions.
+1. Passes your input directly to a `tsserver` protocol command
+2. Returns the raw response — no formatting, no grouping, no filtering
 
-There is no regex, no custom path resolution, no heuristics. The TypeScript compiler does all the work.
+| Tool                  | tsserver command(s)                                     |
+| --------------------- | ------------------------------------------------------- |
+| `rename_symbol`       | `rename-full` → `renameLocations-full`                  |
+| `rename_file_or_dir`  | `getEditsForFileRename-full`                            |
+| `find_all_references` | `references`                                            |
+| `get_diagnostics`     | `semanticDiagnosticsSync` + `suggestionDiagnosticsSync` |
+| `organize_imports`    | `organizeImports-full`                                  |
+| `get_code_fixes`      | `getCodeFixes`                                          |
+| `extract_function`    | `getEditsForRefactor-full`                              |
+| `extract_constant`    | `getEditsForRefactor-full`                              |
+| `move_symbol`         | `getEditsForRefactor-full`                              |
+| `inline_variable`     | `getEditsForRefactor-full`                              |
+
+There is no regex, no custom path resolution, no heuristics, no output formatting. The TypeScript compiler does all the work.
 
 ## Quick Start
 
@@ -81,59 +99,49 @@ Add `ts-mcp-server` to your client's MCP configuration.
 
 Rename a TypeScript/JavaScript symbol and update all references across the project.
 
-| Parameter | Type      | Required | Description                                                                                   |
-| --------- | --------- | -------- | --------------------------------------------------------------------------------------------- |
-| `file`    | `string`  | ✅       | File path containing the symbol (absolute or relative to cwd)                                 |
-| `line`    | `number`  | ✅       | 1-based line number where the symbol appears                                                  |
-| `offset`  | `number`  | ✅       | 1-based character offset on the line                                                          |
-| `newName` | `string`  | ✅       | New name for the symbol                                                                       |
-| `preview` | `boolean` | —        | If `true`, returns a summary of what would change without applying anything. Default: `false` |
+| Parameter | Type      | Required | Description                                                   |
+| --------- | --------- | -------- | ------------------------------------------------------------- |
+| `file`    | `string`  | ✅       | File path containing the symbol (absolute or relative to cwd) |
+| `line`    | `number`  | ✅       | 1-based line number where the symbol appears                  |
+| `offset`  | `number`  | ✅       | 1-based character offset on the line                          |
+| `newName` | `string`  | ✅       | New name for the symbol                                       |
+| `preview` | `boolean` | —        | If `true`, return changes without applying. Default: `false`  |
 
 **Examples:**
 
 ```
-# Rename a function
 rename_symbol  file="src/utils/helpers.ts"  line=5  offset=17  newName="formatCurrency"
-
-# Rename a React component
 rename_symbol  file="src/components/Button.tsx"  line=10  offset=17  newName="PrimaryButton"
-
-# Rename an interface
 rename_symbol  file="src/types.ts"  line=3  offset=11  newName="UserProfile"
-
-# Preview changes without applying
 rename_symbol  file="src/utils/helpers.ts"  line=5  offset=17  newName="formatCurrency"  preview=true
 ```
+
+---
 
 ### `rename_file_or_dir`
 
 Rename or move a TypeScript/JavaScript file or folder and update all import paths across the project.
 
-| Parameter | Type      | Required | Description                                                                                   |
-| --------- | --------- | -------- | --------------------------------------------------------------------------------------------- |
-| `from`    | `string`  | ✅       | Current file or folder path (absolute or relative to cwd)                                     |
-| `to`      | `string`  | ✅       | New file or folder path (absolute or relative to cwd)                                         |
-| `preview` | `boolean` | —        | If `true`, returns a summary of what would change without applying anything. Default: `false` |
+| Parameter | Type      | Required | Description                                                  |
+| --------- | --------- | -------- | ------------------------------------------------------------ |
+| `from`    | `string`  | ✅       | Current file or folder path (absolute or relative to cwd)    |
+| `to`      | `string`  | ✅       | New file or folder path (absolute or relative to cwd)        |
+| `preview` | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
 
 **Examples:**
 
 ```
-# Rename a file
 rename_file_or_dir  from="src/utils/helpers.ts"  to="src/utils/string-helpers.ts"
-
-# Move a file to a different directory
 rename_file_or_dir  from="src/Button.tsx"  to="src/components/ui/Button.tsx"
-
-# Rename a folder
 rename_file_or_dir  from="src/components/primitives"  to="src/components/ui"
-
-# Preview changes without applying
 rename_file_or_dir  from="src/old-name.ts"  to="src/new-name.ts"  preview=true
 ```
 
+---
+
 ### `find_all_references`
 
-Find all usages of a symbol across the project. Returns references grouped by file with line text for context.
+Find all usages of a symbol across the project.
 
 | Parameter | Type     | Required | Description                                  |
 | --------- | -------- | -------- | -------------------------------------------- |
@@ -144,19 +152,15 @@ Find all usages of a symbol across the project. Returns references grouped by fi
 **Examples:**
 
 ```
-# Find all usages of a function
 find_all_references  file="src/utils/helpers.ts"  line=5  offset=17
-
-# Find all usages of a type
 find_all_references  file="src/types.ts"  line=3  offset=11
-
-# Find all usages of a React component
-find_all_references  file="src/components/Button.tsx"  line=10  offset=17
 ```
+
+---
 
 ### `get_diagnostics`
 
-Get all errors, warnings, and suggestions for a TypeScript/JavaScript file. Reports type errors, unused variables, unused imports, unreachable code, and more.
+Get all errors, warnings, and suggestions for a file. Returns semantic diagnostics and suggestion diagnostics as separate arrays.
 
 | Parameter | Type     | Required | Description                             |
 | --------- | -------- | -------- | --------------------------------------- |
@@ -165,14 +169,156 @@ Get all errors, warnings, and suggestions for a TypeScript/JavaScript file. Repo
 **Examples:**
 
 ```
-# Get diagnostics for a file
 get_diagnostics  file="src/utils/helpers.ts"
-
-# Check a component for errors
 get_diagnostics  file="src/components/Button.tsx"
 ```
 
-**Note:** Unused-code diagnostics (unused variables, unused imports) only appear if your `tsconfig.json` has `noUnusedLocals` and/or `noUnusedParameters` enabled.
+> **Note:** Unused-code diagnostics (unused variables, unused imports) only appear if your `tsconfig.json` has `noUnusedLocals` and/or `noUnusedParameters` enabled.
+
+---
+
+### `organize_imports`
+
+Sort, coalesce, and remove unused imports in a file.
+
+| Parameter | Type      | Required | Description                                                  |
+| --------- | --------- | -------- | ------------------------------------------------------------ |
+| `file`    | `string`  | ✅       | File path (absolute or relative to cwd)                      |
+| `preview` | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+
+**Examples:**
+
+```
+organize_imports  file="src/utils/helpers.ts"
+organize_imports  file="src/components/Button.tsx"  preview=true
+```
+
+---
+
+### `get_code_fixes`
+
+Get available code fixes for specific error codes at a range in a file. Use `get_diagnostics` first to discover error codes and ranges, then pass them here.
+
+| Parameter     | Type       | Required | Description                                |
+| ------------- | ---------- | -------- | ------------------------------------------ |
+| `file`        | `string`   | ✅       | File path (absolute or relative to cwd)    |
+| `startLine`   | `number`   | ✅       | 1-based start line of the diagnostic range |
+| `startOffset` | `number`   | ✅       | 1-based start character offset             |
+| `endLine`     | `number`   | ✅       | 1-based end line of the diagnostic range   |
+| `endOffset`   | `number`   | ✅       | 1-based end character offset               |
+| `errorCodes`  | `number[]` | ✅       | Diagnostic error codes to get fixes for    |
+
+**Examples:**
+
+```
+# Get fixes for a "Cannot find name" error (code 2304) at line 10
+get_code_fixes  file="src/app.ts"  startLine=10  startOffset=1  endLine=10  endOffset=20  errorCodes=[2304]
+
+# Get fixes for multiple error codes
+get_code_fixes  file="src/app.ts"  startLine=5  startOffset=1  endLine=5  endOffset=30  errorCodes=[2304, 2552]
+```
+
+---
+
+### `extract_function`
+
+Extract a selected code range into a new function. TypeScript auto-detects parameters and return type. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename_symbol` to give the function a meaningful name.
+
+| Parameter     | Type      | Required | Description                                                  |
+| ------------- | --------- | -------- | ------------------------------------------------------------ |
+| `file`        | `string`  | ✅       | File path (absolute or relative to cwd)                      |
+| `startLine`   | `number`  | ✅       | 1-based start line of the selection                          |
+| `startOffset` | `number`  | ✅       | 1-based start character offset                               |
+| `endLine`     | `number`  | ✅       | 1-based end line of the selection                            |
+| `endOffset`   | `number`  | ✅       | 1-based end character offset                                 |
+| `preview`     | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+
+**Examples:**
+
+```
+# Extract lines 10-15 into a function
+extract_function  file="src/app.ts"  startLine=10  startOffset=1  endLine=15  endOffset=1
+
+# Preview the extraction
+extract_function  file="src/app.ts"  startLine=10  startOffset=1  endLine=15  endOffset=1  preview=true
+```
+
+---
+
+### `extract_constant`
+
+Extract a selected expression into a named constant. TypeScript infers the type. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename_symbol` to give the constant a meaningful name.
+
+| Parameter     | Type      | Required | Description                                                  |
+| ------------- | --------- | -------- | ------------------------------------------------------------ |
+| `file`        | `string`  | ✅       | File path (absolute or relative to cwd)                      |
+| `startLine`   | `number`  | ✅       | 1-based start line of the expression                         |
+| `startOffset` | `number`  | ✅       | 1-based start character offset                               |
+| `endLine`     | `number`  | ✅       | 1-based end line of the expression                           |
+| `endOffset`   | `number`  | ✅       | 1-based end character offset                                 |
+| `preview`     | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+
+**Examples:**
+
+```
+# Extract an expression into a constant
+extract_constant  file="src/app.ts"  startLine=8  startOffset=12  endLine=8  endOffset=35
+
+# Preview the extraction
+extract_constant  file="src/app.ts"  startLine=8  startOffset=12  endLine=8  endOffset=35  preview=true
+```
+
+---
+
+### `move_symbol`
+
+Move top-level declarations (functions, classes, types, constants) to another file. All imports across the project are rewired automatically. If the target file doesn't exist, tsserver creates it.
+
+| Parameter     | Type      | Required | Description                                                  |
+| ------------- | --------- | -------- | ------------------------------------------------------------ |
+| `file`        | `string`  | ✅       | Source file path (absolute or relative to cwd)               |
+| `startLine`   | `number`  | ✅       | 1-based start line of the declaration                        |
+| `startOffset` | `number`  | ✅       | 1-based start character offset                               |
+| `endLine`     | `number`  | ✅       | 1-based end line of the declaration                          |
+| `endOffset`   | `number`  | ✅       | 1-based end character offset                                 |
+| `targetFile`  | `string`  | ✅       | Destination file path (absolute or relative to cwd)          |
+| `preview`     | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+
+**Examples:**
+
+```
+# Move a function to a utility file
+move_symbol  file="src/app.ts"  startLine=20  startOffset=1  endLine=35  endOffset=2  targetFile="src/utils/helpers.ts"
+
+# Move a type to a shared types file
+move_symbol  file="src/components/Button.tsx"  startLine=1  startOffset=1  endLine=5  endOffset=2  targetFile="src/types.ts"
+
+# Preview the move
+move_symbol  file="src/app.ts"  startLine=20  startOffset=1  endLine=35  endOffset=2  targetFile="src/utils/helpers.ts"  preview=true
+```
+
+---
+
+### `inline_variable`
+
+Inline a variable — replace all references with the variable's initializer and delete the declaration. Position must be on the variable name in its declaration or any usage.
+
+| Parameter | Type      | Required | Description                                                  |
+| --------- | --------- | -------- | ------------------------------------------------------------ |
+| `file`    | `string`  | ✅       | File path (absolute or relative to cwd)                      |
+| `line`    | `number`  | ✅       | 1-based line number of the variable                          |
+| `offset`  | `number`  | ✅       | 1-based character offset on the line                         |
+| `preview` | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+
+**Examples:**
+
+```
+# Inline a variable
+inline_variable  file="src/app.ts"  line=12  offset=7
+
+# Preview the inlining
+inline_variable  file="src/app.ts"  line=12  offset=7  preview=true
+```
 
 ## Supported Languages & Frameworks
 
@@ -214,3 +360,6 @@ Yes. Add a `jsconfig.json` (which is equivalent to `tsconfig.json` with `allowJs
 
 **Does it work with path aliases (`@/components/...`)?**
 Yes. `tsserver` resolves path aliases defined in `tsconfig.json`'s `paths` and `baseUrl` settings.
+
+**Is the output modified or formatted?**
+No. Every tool returns the raw, unmodified `tsserver` response serialized as JSON. Nothing is truncated, simplified, grouped, or filtered.

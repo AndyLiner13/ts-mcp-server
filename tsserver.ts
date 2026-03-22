@@ -5,6 +5,7 @@
 // "-full" command variant returns character offsets ({start, length})
 // so edits are direct string slices with zero conversion.
 
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { fork, type ChildProcess } from "child_process";
 import { readFileSync, writeFileSync } from "fs";
 import ts from "typescript";
@@ -100,4 +101,52 @@ export async function writeEdits(
     );
   }
   return updated;
+}
+
+// ── Refactor helper (shared by extract_function, extract_constant,
+//    move_symbol, inline_variable, and any future refactor tools) ─
+//
+// Wraps the getEditsForRefactor-full → writeEdits flow.
+// Each refactor tool only needs to supply the protocol args.
+
+export async function applyRefactor(
+  args: ts.server.protocol.GetEditsForRefactorRequestArgs,
+  preview: boolean,
+): Promise<CallToolResult> {
+  try {
+    await open(args.file);
+
+    const result = await send<
+      ts.RefactorEditInfo,
+      ts.server.protocol.GetEditsForRefactorRequestArgs
+    >(`${ts.server.protocol.CommandTypes.GetEditsForRefactor}-full`, args);
+
+    if (result.notApplicableReason) {
+      return {
+        content: [{ type: "text", text: result.notApplicableReason }],
+        isError: true,
+      };
+    }
+
+    if (preview) {
+      return {
+        content: [{ type: "text", text: JSON.stringify(result) }],
+      };
+    }
+
+    const updated = await writeEdits(result.edits, args.file);
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({ ...result, updatedFiles: updated }),
+        },
+      ],
+    };
+  } catch (err: unknown) {
+    return {
+      content: [{ type: "text", text: String(err) }],
+      isError: true,
+    };
+  }
 }
