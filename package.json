@@ -13,7 +13,8 @@
     "build": "tsc",
     "lint": "eslint index.ts tsserver.ts tools/",
     "start": "node dist/index.js",
-    "prepublishOnly": "tsc"
+    "prepublishOnly": "tsc",
+    "publish:npm": "npm publish --access public"
   },
   "keywords": [
     "mcp",
