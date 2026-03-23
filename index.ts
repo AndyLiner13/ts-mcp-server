@@ -2,6 +2,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { register as definition } from "./tools/definition.js";
 import { register as extractConstant } from "./tools/extract-constant.js";
 import { register as extractFunction } from "./tools/extract-function.js";
 import { register as extractType } from "./tools/extract-type.js";
@@ -11,6 +12,8 @@ import { register as getDiagnostics } from "./tools/get-diagnostics.js";
 import { register as inferReturnType } from "./tools/infer-return-type.js";
 import { register as inlineVariable } from "./tools/inline-variable.js";
 import { register as moveSymbol } from "./tools/move-symbol.js";
+import { register as navtree } from "./tools/navtree.js";
+import { register as navto } from "./tools/navto.js";
 import { register as organizeImports } from "./tools/organize-imports.js";
 import { register as quickinfo } from "./tools/quickinfo.js";
 import { register as renameFileOrDir } from "./tools/rename-file-or-dir.js";
@@ -34,6 +37,9 @@ inlineVariable(server);
 extractType(server);
 inferReturnType(server);
 quickinfo(server);
+navtree(server);
+definition(server);
+navto(server);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
