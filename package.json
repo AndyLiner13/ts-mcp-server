@@ -15,7 +15,7 @@
     "start": "node dist/index.js",
     "prepublishOnly": "tsc",
     "publish": "npm publish --access public",
-    "patch": "npm version patch && npm publish --access public"
+    "patch": "npm version patch"
   },
   "keywords": [
     "mcp",
