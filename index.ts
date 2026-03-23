@@ -18,6 +18,7 @@ import { register as navtree } from "./tools/navtree.js";
 import { register as navto } from "./tools/navto.js";
 import { register as organizeImports } from "./tools/organize-imports.js";
 import { register as prepareCallHierarchy } from "./tools/prepare-call-hierarchy.js";
+import { register as projectInfo } from "./tools/project-info.js";
 import { register as provideCallHierarchyIncomingCalls } from "./tools/provide-call-hierarchy-incoming-calls.js";
 import { register as provideCallHierarchyOutgoingCalls } from "./tools/provide-call-hierarchy-outgoing-calls.js";
 import { register as quickinfo } from "./tools/quickinfo.js";
@@ -52,6 +53,7 @@ provideCallHierarchyIncomingCalls(server);
 provideCallHierarchyOutgoingCalls(server);
 typeDefinition(server);
 implementation(server);
+projectInfo(server);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
