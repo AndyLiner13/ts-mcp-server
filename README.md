@@ -14,7 +14,7 @@ AI coding assistants can read and write code, but they struggle with **structura
 
 ## Features
 
-- **23 tools** — each a 1:1 mapping to a native `tsserver` protocol command
+- **28 tools** — each a 1:1 mapping to a native `tsserver` protocol command
 
 ### Refactoring (12 tools)
 
@@ -31,7 +31,7 @@ AI coding assistants can read and write code, but they struggle with **structura
 - **Get diagnostics** — retrieve type errors, warnings, and suggestions for any file
 - **Find all references** — locate every usage of a symbol across the project
 
-### Code Intelligence (11 tools)
+### Code Intelligence (16 tools)
 
 - **Quick info** — full type information, documentation, and JSDoc tags for any symbol (hover info)
 - **Navigation tree** — complete hierarchical structure of a file (all declarations and their nesting)
@@ -44,6 +44,11 @@ AI coding assistants can read and write code, but they struggle with **structura
 - **Incoming calls** — find all callers of a function ("who calls this?")
 - **Outgoing calls** — find all callees of a function ("what does this call?")
 - **Project info** — get tsconfig.json path, file list, and language service status
+- **Completion info** — autocomplete suggestions at a position
+- **Completion entry details** — full documentation and type signature for a completion item
+- **Signature help** — function parameter info and overloads at a call site
+- **Document highlights** — all occurrences of a symbol within a file, with read/write distinction
+- **Get applicable refactors** — discover what refactorings are available at a position or selection
 
 ### Design Principles
 
@@ -92,6 +97,11 @@ Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over N
 | `provideCallHierarchyIncomingCalls` | `provideCallHierarchyIncomingCalls` |
 | `provideCallHierarchyOutgoingCalls` | `provideCallHierarchyOutgoingCalls` |
 | `projectInfo`                       | `projectInfo`                       |
+| `completion_info`                   | `completionInfo`                    |
+| `completion_entry_details`          | `completionEntryDetails`            |
+| `signature_help`                    | `signatureHelp`                     |
+| `document_highlights`               | `documentHighlights`                |
+| `get_applicable_refactors`          | `getApplicableRefactors`            |
 
 There is no regex, no custom path resolution, no heuristics, no output formatting. The TypeScript compiler does all the work.
 
@@ -616,6 +626,110 @@ Get the tsconfig.json path, the full list of files in the project, and whether t
 ```
 projectInfo  file="src/app.ts"
 projectInfo  file="src/app.ts"  needFileNameList=false
+```
+
+---
+
+### `completion_info`
+
+Get autocomplete suggestions at a position. Returns all possible completions with their kinds, sort text, and insert text. Useful for understanding what symbols, methods, or properties are available at a location.
+
+| Parameter          | Type     | Required | Description                                                                                 |
+| ------------------ | -------- | -------- | ------------------------------------------------------------------------------------------- |
+| `file`             | `string` | ✅       | File path (absolute or relative to cwd)                                                     |
+| `line`             | `number` | ✅       | 1-based line number                                                                         |
+| `offset`           | `number` | ✅       | 1-based character offset on the line                                                        |
+| `prefix`           | `string` | —        | Optional prefix to filter completions                                                       |
+| `triggerCharacter` | `string` | —        | Character that triggered completion (e.g., `.`, `"`, `'`, `` ` ``, `/`, `@`, `<`, `#`, ` `) |
+
+**Examples:**
+
+```
+completion_info  file="src/app.ts"  line=10  offset=15
+completion_info  file="src/app.ts"  line=10  offset=15  prefix="get"
+completion_info  file="src/app.ts"  line=10  offset=15  triggerCharacter="."
+```
+
+---
+
+### `completion_entry_details`
+
+Get full details for specific completion entries — documentation, full type signature, JSDoc tags, and code actions (like auto-imports). Use as a follow-up to `completion_info`.
+
+| Parameter    | Type       | Required | Description                                    |
+| ------------ | ---------- | -------- | ---------------------------------------------- |
+| `file`       | `string`   | ✅       | File path (absolute or relative to cwd)        |
+| `line`       | `number`   | ✅       | 1-based line number                            |
+| `offset`     | `number`   | ✅       | 1-based character offset on the line           |
+| `entryNames` | `string[]` | ✅       | Names of completion entries to get details for |
+
+**Examples:**
+
+```
+completion_entry_details  file="src/app.ts"  line=10  offset=15  entryNames=["map","filter"]
+completion_entry_details  file="src/app.ts"  line=5  offset=10  entryNames=["useState"]
+```
+
+---
+
+### `signature_help`
+
+Get function/method signature information at a call site. Returns parameter names, types, and documentation for each overload. Use when the cursor is inside function call parentheses.
+
+| Parameter       | Type     | Required | Description                                                                                   |
+| --------------- | -------- | -------- | --------------------------------------------------------------------------------------------- |
+| `file`          | `string` | ✅       | File path (absolute or relative to cwd)                                                       |
+| `line`          | `number` | ✅       | 1-based line number                                                                           |
+| `offset`        | `number` | ✅       | 1-based character offset (inside the function call parentheses)                               |
+| `triggerReason` | `object` | —        | Optional: `{ kind: "invoked" \| "retrigger" \| "characterTyped", triggerCharacter?: string }` |
+
+**Examples:**
+
+```
+signature_help  file="src/app.ts"  line=12  offset=20
+signature_help  file="src/app.ts"  line=12  offset=20  triggerReason={"kind":"invoked"}
+```
+
+---
+
+### `document_highlights`
+
+Find all occurrences of a symbol within a file (or set of files). Distinguishes between read and write references. More efficient than `find_all_references` when you only need local occurrences.
+
+| Parameter       | Type       | Required | Description                             |
+| --------------- | ---------- | -------- | --------------------------------------- |
+| `file`          | `string`   | ✅       | File path (absolute or relative to cwd) |
+| `line`          | `number`   | ✅       | 1-based line number                     |
+| `offset`        | `number`   | ✅       | 1-based character offset on the line    |
+| `filesToSearch` | `string[]` | —        | Optional: limit search to these files   |
+
+**Examples:**
+
+```
+document_highlights  file="src/app.ts"  line=10  offset=5
+document_highlights  file="src/app.ts"  line=10  offset=5  filesToSearch=["src/app.ts","src/utils.ts"]
+```
+
+---
+
+### `get_applicable_refactors`
+
+Discover what refactorings are available at a position or selection. Use before attempting a refactor to see what's possible. Returns a list of available refactors with their action names and descriptions.
+
+| Parameter       | Type     | Required | Description                             |
+| --------------- | -------- | -------- | --------------------------------------- |
+| `file`          | `string` | ✅       | File path (absolute or relative to cwd) |
+| `startLine`     | `number` | ✅       | 1-based start line of the selection     |
+| `startOffset`   | `number` | ✅       | 1-based start character offset          |
+| `endLine`       | `number` | ✅       | 1-based end line of the selection       |
+| `endOffset`     | `number` | ✅       | 1-based end character offset            |
+| `triggerReason` | `string` | —        | `"invoked"` or `"implicit"`             |
+
+**Examples:**
+
+```
+get_applicable_refactors  file="src/app.ts"  startLine=10  startOffset=1  endLine=15  endOffset=1
+get_applicable_refactors  file="src/app.ts"  startLine=8  startOffset=12  endLine=8  endOffset=35
 ```
 
 ## Supported Languages & Frameworks
