@@ -53,6 +53,16 @@ Follow the [Model Context Protocol specification](https://modelcontextprotocol.i
 - Use `snake_case` for multi-word names (e.g., `find_all_references`, `rename_symbol`)
 - Align with tsserver's native naming where possible
 
+**Naming conventions by tool type:**
+
+| Tool Type                 | Prefix       | Examples                                                                  |
+| ------------------------- | ------------ | ------------------------------------------------------------------------- |
+| Read-only query           | `get_*`      | `get_diagnostics`, `get_code_fixes`, `get_applicable_refactors`           |
+| Apply edits (destructive) | Action verb  | `rename_symbol`, `extract_function`, `organize_imports`, `apply_code_fix` |
+| Navigation                | Noun or verb | `definition`, `implementation`, `find_all_references`                     |
+
+**Key principle:** If a tool modifies files by default, use an action verb (not `get_*`). The `get_*` prefix implies read-only behavior.
+
 ### Tool Title (`title`)
 
 - Human-readable display name
