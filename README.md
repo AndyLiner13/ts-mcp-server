@@ -4,7 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/ts-mcp-server)](https://www.npmjs.com/package/ts-mcp-server)
 [![license](https://img.shields.io/npm/l/ts-mcp-server)](./LICENSE)
 
-A lightweight [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for **TypeScript and JavaScript refactoring**. Every tool maps directly to a `tsserver` protocol command — the output is the raw, unmodified response from TypeScript's compiler. Rename symbols, extract functions, move declarations between files, reorganize imports, get diagnostics, find references, and more — with every `import`, `require`, re-export, and reference updated automatically across your entire codebase.
+A lightweight [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for **TypeScript and JavaScript refactoring and code intelligence**. Every tool maps directly to a `tsserver` protocol command — the output is the raw, unmodified response from TypeScript's compiler. Rename symbols, extract functions, move declarations between files, reorganize imports, navigate type hierarchies, explore call graphs, search symbols across your workspace, and more — with every `import`, `require`, re-export, and reference updated automatically across your entire codebase.
 
 ## Why
 
@@ -14,8 +14,12 @@ AI coding assistants can read and write code, but they struggle with **structura
 
 ## Features
 
-- **12 tools** — each a 1:1 mapping to a native `tsserver` protocol command
+- **23 tools** — each a 1:1 mapping to a native `tsserver` protocol command
+
+### Refactoring (12 tools)
+
 - **Rename symbols** — variables, functions, classes, types, properties, interfaces, enums — all references updated across every file
+- **Rename / move files and folders** — all import paths updated automatically
 - **Extract function** — extract a code range into a new function with auto-detected parameters and return type
 - **Extract constant** — extract an expression into a named constant with inferred type
 - **Extract type** — extract an inline type annotation into a named type alias
@@ -26,7 +30,23 @@ AI coding assistants can read and write code, but they struggle with **structura
 - **Get code fixes** — retrieve available auto-fixes for specific diagnostics (missing imports, type mismatches, etc.)
 - **Get diagnostics** — retrieve type errors, warnings, and suggestions for any file
 - **Find all references** — locate every usage of a symbol across the project
-- **Rename / move files and folders** — all import paths updated automatically
+
+### Code Intelligence (11 tools)
+
+- **Quick info** — full type information, documentation, and JSDoc tags for any symbol (hover info)
+- **Navigation tree** — complete hierarchical structure of a file (all declarations and their nesting)
+- **Go to definition** — jump to where a symbol is declared
+- **Go to type definition** — jump to the type's definition, not the variable's declaration
+- **Go to implementation** — find concrete implementations of an interface or abstract class
+- **Navigate to symbol** — workspace-wide symbol search by name
+- **File references** — find every file that imports a given file (reverse dependency graph)
+- **Prepare call hierarchy** — get call hierarchy entry point for a function/method
+- **Incoming calls** — find all callers of a function ("who calls this?")
+- **Outgoing calls** — find all callees of a function ("what does this call?")
+- **Project info** — get tsconfig.json path, file list, and language service status
+
+### Design Principles
+
 - **Pure tsserver output** — every tool returns the raw, unmodified `tsserver` response as JSON
 - **Preview mode** — see exactly what would change before applying anything
 - **Automatic project discovery** — `tsconfig.json` is detected automatically; no configuration needed
@@ -39,6 +59,8 @@ Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over N
 
 1. Passes your input directly to a `tsserver` protocol command
 2. Returns the raw response — no formatting, no grouping, no filtering
+
+**Refactoring tools:**
 
 | Tool                  | tsserver command(s)                                     |
 | --------------------- | ------------------------------------------------------- |
@@ -54,6 +76,22 @@ Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over N
 | `infer_return_type`   | `getEditsForRefactor-full`                              |
 | `move_symbol`         | `getEditsForRefactor-full`                              |
 | `inline_variable`     | `getEditsForRefactor-full`                              |
+
+**Code intelligence tools:**
+
+| Tool                                | tsserver command                    |
+| ----------------------------------- | ----------------------------------- |
+| `quickinfo`                         | `quickinfo`                         |
+| `navtree`                           | `navtree`                           |
+| `definition`                        | `definition`                        |
+| `typeDefinition`                    | `typeDefinition`                    |
+| `implementation`                    | `implementation`                    |
+| `navto`                             | `navto`                             |
+| `fileReferences`                    | `fileReferences`                    |
+| `prepareCallHierarchy`              | `prepareCallHierarchy`              |
+| `provideCallHierarchyIncomingCalls` | `provideCallHierarchyIncomingCalls` |
+| `provideCallHierarchyOutgoingCalls` | `provideCallHierarchyOutgoingCalls` |
+| `projectInfo`                       | `projectInfo`                       |
 
 There is no regex, no custom path resolution, no heuristics, no output formatting. The TypeScript compiler does all the work.
 
@@ -374,6 +412,210 @@ infer_return_type  file="src/app.ts"  line=10  offset=10
 
 # Preview the change
 infer_return_type  file="src/app.ts"  line=10  offset=10  preview=true
+```
+
+### `quickinfo`
+
+Get the full type information, documentation, and JSDoc tags for the symbol at a given position. This is the "hover" info.
+
+| Parameter | Type     | Required | Description                             |
+| --------- | -------- | -------- | --------------------------------------- |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd) |
+| `line`    | `number` | ✅       | 1-based line number                     |
+| `offset`  | `number` | ✅       | 1-based character offset on the line    |
+
+**Examples:**
+
+```
+quickinfo  file="src/utils/helpers.ts"  line=5  offset=17
+quickinfo  file="src/types.ts"  line=3  offset=11
+```
+
+---
+
+### `navtree`
+
+Get the complete hierarchical structure of a file — all classes, functions, variables, interfaces, type aliases, enums, and their nesting.
+
+| Parameter | Type     | Required | Description                             |
+| --------- | -------- | -------- | --------------------------------------- |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd) |
+
+**Examples:**
+
+```
+navtree  file="src/utils/helpers.ts"
+navtree  file="src/components/Button.tsx"
+```
+
+---
+
+### `definition`
+
+Go to the definition of a symbol. Returns the file location(s) where the symbol is declared.
+
+| Parameter | Type     | Required | Description                             |
+| --------- | -------- | -------- | --------------------------------------- |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd) |
+| `line`    | `number` | ✅       | 1-based line number                     |
+| `offset`  | `number` | ✅       | 1-based character offset on the line    |
+
+**Examples:**
+
+```
+definition  file="src/app.ts"  line=10  offset=5
+definition  file="src/components/Button.tsx"  line=3  offset=15
+```
+
+---
+
+### `typeDefinition`
+
+Navigate to the type's definition, not the variable's declaration. Given `const user: UserProfile = ...`, `definition` goes to the variable, but `typeDefinition` goes to the `UserProfile` interface.
+
+| Parameter | Type     | Required | Description                             |
+| --------- | -------- | -------- | --------------------------------------- |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd) |
+| `line`    | `number` | ✅       | 1-based line number                     |
+| `offset`  | `number` | ✅       | 1-based character offset on the line    |
+
+**Examples:**
+
+```
+typeDefinition  file="src/app.ts"  line=10  offset=12
+typeDefinition  file="src/services/api.ts"  line=5  offset=8
+```
+
+---
+
+### `implementation`
+
+Find concrete implementations of an interface or abstract class. Given an interface `Serializable`, returns every class that implements it.
+
+| Parameter | Type     | Required | Description                             |
+| --------- | -------- | -------- | --------------------------------------- |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd) |
+| `line`    | `number` | ✅       | 1-based line number                     |
+| `offset`  | `number` | ✅       | 1-based character offset on the line    |
+
+**Examples:**
+
+```
+implementation  file="src/types.ts"  line=1  offset=18
+implementation  file="src/interfaces/repository.ts"  line=3  offset=18
+```
+
+---
+
+### `navto`
+
+Workspace-wide symbol search by name. Takes a search string and returns matching symbols across all project files with their locations and kinds.
+
+| Parameter         | Type      | Required | Description                                                     |
+| ----------------- | --------- | -------- | --------------------------------------------------------------- |
+| `searchValue`     | `string`  | ✅       | Symbol name or prefix to search for                             |
+| `file`            | `string`  | —        | Optional file for project context (absolute or relative to cwd) |
+| `maxResultCount`  | `number`  | —        | Maximum number of results to return                             |
+| `currentFileOnly` | `boolean` | —        | If `true`, only search the specified file                       |
+
+**Examples:**
+
+```
+navto  searchValue="User"  file="src/app.ts"
+navto  searchValue="handle"  file="src/app.ts"  maxResultCount=10
+navto  searchValue="Button"  file="src/components/Button.tsx"  currentFileOnly=true
+```
+
+---
+
+### `fileReferences`
+
+Find every file that imports or references a given file. The reverse dependency graph for a single file.
+
+| Parameter | Type     | Required | Description                             |
+| --------- | -------- | -------- | --------------------------------------- |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd) |
+
+**Examples:**
+
+```
+fileReferences  file="src/utils/helpers.ts"
+fileReferences  file="src/types.ts"
+```
+
+---
+
+### `prepareCallHierarchy`
+
+Get the call hierarchy item(s) at a position — the entry point for call hierarchy queries. Returns the function/method name, kind, file location, and spans.
+
+| Parameter | Type     | Required | Description                             |
+| --------- | -------- | -------- | --------------------------------------- |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd) |
+| `line`    | `number` | ✅       | 1-based line number                     |
+| `offset`  | `number` | ✅       | 1-based character offset on the line    |
+
+**Examples:**
+
+```
+prepareCallHierarchy  file="src/services/api.ts"  line=10  offset=17
+prepareCallHierarchy  file="src/utils/helpers.ts"  line=5  offset=17
+```
+
+---
+
+### `provideCallHierarchyIncomingCalls`
+
+Find all functions/methods that call the function at the given position. Answers "who calls this?"
+
+| Parameter | Type     | Required | Description                             |
+| --------- | -------- | -------- | --------------------------------------- |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd) |
+| `line`    | `number` | ✅       | 1-based line number                     |
+| `offset`  | `number` | ✅       | 1-based character offset on the line    |
+
+**Examples:**
+
+```
+provideCallHierarchyIncomingCalls  file="src/services/api.ts"  line=10  offset=17
+provideCallHierarchyIncomingCalls  file="src/utils/helpers.ts"  line=5  offset=17
+```
+
+---
+
+### `provideCallHierarchyOutgoingCalls`
+
+Find all functions/methods that the function at the given position calls. Answers "what does this call?"
+
+| Parameter | Type     | Required | Description                             |
+| --------- | -------- | -------- | --------------------------------------- |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd) |
+| `line`    | `number` | ✅       | 1-based line number                     |
+| `offset`  | `number` | ✅       | 1-based character offset on the line    |
+
+**Examples:**
+
+```
+provideCallHierarchyOutgoingCalls  file="src/services/api.ts"  line=10  offset=17
+provideCallHierarchyOutgoingCalls  file="src/utils/helpers.ts"  line=5  offset=17
+```
+
+---
+
+### `projectInfo`
+
+Get the tsconfig.json path, the full list of files in the project, and whether the language service is active.
+
+| Parameter          | Type      | Required | Description                                                               |
+| ------------------ | --------- | -------- | ------------------------------------------------------------------------- |
+| `file`             | `string`  | ✅       | File path (absolute or relative to cwd)                                   |
+| `needFileNameList` | `boolean` | —        | If `true`, include the list of all files in the project (default: `true`) |
+
+**Examples:**
+
+```
+projectInfo  file="src/app.ts"
+projectInfo  file="src/app.ts"  needFileNameList=false
 ```
 
 ## Supported Languages & Frameworks
