@@ -35,7 +35,7 @@ import { register as provideCallHierarchyIncomingCalls } from "./tools/provide-c
 import { register as provideCallHierarchyOutgoingCalls } from "./tools/provide-call-hierarchy-outgoing-calls.js";
 import { register as provideInlayHints } from "./tools/provide-inlay-hints.js";
 import { register as quickinfo } from "./tools/quickinfo.js";
-import { register as getEditsForFileRename } from "./tools/get-edits-for-file-rename.js";
+import { register as renameFileOrDirectory } from "./tools/rename-file-or-directory.js";
 import { register as rename } from "./tools/rename.js";
 import { register as signatureHelp } from "./tools/signature-help.js";
 import { register as todoComments } from "./tools/todo-comments.js";
@@ -46,7 +46,7 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
-getEditsForFileRename(server);
+renameFileOrDirectory(server);
 rename(server);
 getDiagnostics(server);
 references(server);

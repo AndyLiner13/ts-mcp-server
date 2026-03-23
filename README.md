@@ -80,7 +80,7 @@ Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over N
 | Tool                    | tsserver command(s)                                     |
 | ----------------------- | ------------------------------------------------------- |
 | `rename`                | `rename-full` → `renameLocations-full`                  |
-| `getEditsForFileRename` | `getEditsForFileRename-full`                            |
+| `renameFileOrDirectory` | `getEditsForFileRename-full`                            |
 | `references`            | `references`                                            |
 | `getDiagnostics`        | `semanticDiagnosticsSync` + `suggestionDiagnosticsSync` |
 | `organizeImports`       | `organizeImports-full`                                  |
@@ -190,23 +190,23 @@ rename  file="src/utils/helpers.ts"  line=5  offset=17  newName="formatCurrency"
 
 ---
 
-### `getEditsForFileRename`
+### `renameFileOrDirectory`
 
-Rename or move a TypeScript/JavaScript file or folder and update all import paths across the project.
+Rename or move a TypeScript/JavaScript file or directory and update all import paths across the project.
 
 | Parameter | Type      | Required | Description                                                  |
 | --------- | --------- | -------- | ------------------------------------------------------------ |
-| `from`    | `string`  | ✅       | Current file or folder path (absolute or relative to cwd)    |
-| `to`      | `string`  | ✅       | New file or folder path (absolute or relative to cwd)        |
+| `from`    | `string`  | ✅       | Current file or directory path (absolute or relative to cwd) |
+| `to`      | `string`  | ✅       | New file or directory path (absolute or relative to cwd)     |
 | `preview` | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
 
 **Examples:**
 
 ```
-getEditsForFileRename  from="src/utils/helpers.ts"  to="src/utils/string-helpers.ts"
-getEditsForFileRename  from="src/Button.tsx"  to="src/components/ui/Button.tsx"
-getEditsForFileRename  from="src/components/primitives"  to="src/components/ui"
-getEditsForFileRename  from="src/old-name.ts"  to="src/new-name.ts"  preview=true
+renameFileOrDirectory  from="src/utils/helpers.ts"  to="src/utils/string-helpers.ts"
+renameFileOrDirectory  from="src/Button.tsx"  to="src/components/ui/Button.tsx"
+renameFileOrDirectory  from="src/components/primitives"  to="src/components/ui"
+renameFileOrDirectory  from="src/old-name.ts"  to="src/new-name.ts"  preview=true
 ```
 
 ---

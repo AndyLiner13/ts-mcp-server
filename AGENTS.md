@@ -50,8 +50,48 @@ Follow the [Model Context Protocol specification](https://modelcontextprotocol.i
 ### Tool Name (`name`)
 
 - Unique identifier for the tool
+- Naming rules depend on whether the tool is **read-only** or an **edit tool**
+
+#### Read-Only Tools
+
+For tools that only query/read (no `preview` parameter, `readOnlyHint: true`):
+
 - **Must match the exact `CommandTypes` string value** from `ts.server.protocol.CommandTypes` (camelCase, as defined in `typescript.d.ts`)
-- Examples: `references`, `completionInfo`, `getCodeFixes`, `organizeImports`, `rename`, `getEditsForFileRename`
+- Examples: `references`, `completionInfo`, `getCodeFixes`, `quickinfo`, `navtree`, `definition`
+
+#### Edit Tools (Tools That Apply Changes)
+
+Edit tools have a `preview` parameter and can modify files. These tools require special naming:
+
+1. **Search `reference/TypeScript/src/`** for an internal TypeScript API function that performs the same action
+2. **If found**: Use that exact function name (e.g., `renameFileOrDirectory` from `harnessLanguageService.ts`)
+3. **If NOT found**: **STOP and ask the user** what name to use — never guess or invent names
+
+**Why this rule exists:** Edit tools should be named after the action they perform, not the tsserver command they wrap. The tsserver command `getEditsForFileRename` returns edits, but our tool _applies_ those edits — it renames files/directories. The internal TypeScript API already has a name for this action: `renameFileOrDirectory`.
+
+**Process for naming edit tools:**
+
+```bash
+# Search the TypeScript source for matching API names:
+grep -r "functionName" reference/TypeScript/src/
+```
+
+Look in:
+
+- `reference/TypeScript/src/harness/` — test harness APIs
+- `reference/TypeScript/src/services/` — language service APIs
+- `reference/TypeScript/src/server/` — tsserver session APIs
+
+**Examples:**
+
+| tsserver command        | Internal TypeScript API       | Tool name                                  |
+| ----------------------- | ----------------------------- | ------------------------------------------ |
+| `getEditsForFileRename` | `renameFileOrDirectory`       | `renameFileOrDirectory`                    |
+| `rename`                | `rename` (CommandTypes)       | `rename`                                   |
+| `getEditsForRefactor`   | (action-specific)             | `extractFunction`, `extractConstant`, etc. |
+| `organizeImports`       | `organizeImports` (1:1 match) | `organizeImports`                          |
+
+**⚠️ CRITICAL:** If you cannot find a clear 1:1 mapping between the tool's action and an internal TypeScript API, **do not proceed**. Ask the user: _"I cannot find an internal TypeScript API that matches the action this tool performs. What should the tool be named?"_
 
 ### Tool Title (`title`)
 
@@ -278,4 +318,5 @@ pnpm lint                   # ESLint with strict rules
 ❌ Create tools for things tsserver doesn't support natively  
 ❌ Add heuristics or fallback logic when tsserver returns an error  
 ❌ Copy tsserver TSDoc comments as tool descriptions  
-❌ Write descriptions for protocol developers instead of for LLMs
+❌ Write descriptions for protocol developers instead of for LLMs  
+❌ Guess or invent names for edit tools — always check `reference/TypeScript/src/` first, then ask the user if no match is found
