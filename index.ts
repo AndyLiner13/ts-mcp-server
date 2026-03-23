@@ -12,6 +12,7 @@ import { register as inferReturnType } from "./tools/infer-return-type.js";
 import { register as inlineVariable } from "./tools/inline-variable.js";
 import { register as moveSymbol } from "./tools/move-symbol.js";
 import { register as organizeImports } from "./tools/organize-imports.js";
+import { register as quickinfo } from "./tools/quickinfo.js";
 import { register as renameFileOrDir } from "./tools/rename-file-or-dir.js";
 import { register as renameSymbol } from "./tools/rename-symbol.js";
 
@@ -32,6 +33,7 @@ moveSymbol(server);
 inlineVariable(server);
 extractType(server);
 inferReturnType(server);
+quickinfo(server);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
