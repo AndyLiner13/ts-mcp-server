@@ -14,7 +14,7 @@ This is a **pure** MCP server that wraps TypeScript's `tsserver` protocol. The c
 ### 2. One Tool Per tsserver Command
 
 - Each tool maps 1:1 to a single `tsserver` protocol command
-- Tool names should align with the native TypeScript API where possible (e.g., `find_all_references` not `findReferences`)
+- Tool names **must match the exact `CommandTypes` string value** from the tsserver protocol (e.g., `references`, `completionInfo`, `getCodeFixes`)
 - Never combine multiple tsserver commands into a single "convenience" tool
 
 ### 3. Raw Output
@@ -50,18 +50,26 @@ Follow the [Model Context Protocol specification](https://modelcontextprotocol.i
 ### Tool Name (`name`)
 
 - Unique identifier for the tool
-- Use `snake_case` for multi-word names (e.g., `find_all_references`, `rename_symbol`)
-- Align with tsserver's native naming where possible
+- **Must match the exact `CommandTypes` string value** from `ts.server.protocol.CommandTypes` (camelCase, as defined in `typescript.d.ts`)
+- Examples: `references`, `completionInfo`, `getCodeFixes`, `organizeImports`, `rename`, `getEditsForFileRename`
 
-**Naming conventions by tool type:**
+**Exceptions — tools that do NOT map 1:1 to a single tsserver command:**
 
-| Tool Type                 | Prefix       | Examples                                                                  |
-| ------------------------- | ------------ | ------------------------------------------------------------------------- |
-| Read-only query           | `get_*`      | `get_diagnostics`, `get_code_fixes`, `get_applicable_refactors`           |
-| Apply edits (destructive) | Action verb  | `rename_symbol`, `extract_function`, `organize_imports`, `apply_code_fix` |
-| Navigation                | Noun or verb | `definition`, `implementation`, `find_all_references`                     |
+A small number of tools combine or parameterize multiple tsserver calls. These use a descriptive name instead:
 
-**Key principle:** If a tool modifies files by default, use an action verb (not `get_*`). The `get_*` prefix implies read-only behavior.
+| Tool name           | Reason                                                                                  |
+| ------------------- | --------------------------------------------------------------------------------------- |
+| `get_diagnostics`   | Combines `semanticDiagnosticsSync` + `suggestionDiagnosticsSync` into one call          |
+| `extract_function`  | Wraps `getEditsForRefactor` with refactor=`"Extract Symbol"`, action=`function_scope_*` |
+| `extract_constant`  | Wraps `getEditsForRefactor` with refactor=`"Extract Symbol"`, action=`constant_scope_*` |
+| `extract_type`      | Wraps `getEditsForRefactor` with refactor=`"Extract Symbol"`, action=`Extract type`     |
+| `inline_variable`   | Wraps `getEditsForRefactor` with refactor=`"Inline Variable"`                           |
+| `move_symbol`       | Wraps `getEditsForRefactor` with refactor=`"Move..."`                                   |
+| `infer_return_type` | Wraps `getEditsForRefactor` with refactor=`"Infer function return type"`                |
+
+All other tools use the **exact** tsserver command name — no snake_case, no prefixes, no suffixes.
+
+**Key principle:** The tool name is the tsserver `CommandTypes` string value. Look it up in `node_modules/typescript/lib/typescript.d.ts` under `enum CommandTypes`.
 
 ### Tool Title (`title`)
 
@@ -76,7 +84,7 @@ Write descriptions **for LLMs**, not for protocol developers. The MCP spec says 
 1. **What the tool does** — Lead with a clear, concise statement of the tool's purpose
 2. **When to use it** — Include context that helps the model choose the right tool (e.g., "The fundamental 'where is this thing declared?' query")
 3. **What it returns** — Describe the shape of the output so the model knows what to expect
-4. **Follow-up hints** — If the tool's output is commonly used as input to another tool, mention it (e.g., "The response includes renameFilename/renameLocation so you can follow up with rename_symbol")
+4. **Follow-up hints** — If the tool's output is commonly used as input to another tool, mention it (e.g., "The response includes renameFilename/renameLocation so you can follow up with the `rename` tool")
 
 **Do NOT** copy tsserver TSDoc comments verbatim. They describe protocol mechanics ("value of command field is 'quickinfo'") rather than user/model intent. Write descriptions that are clear, action-oriented, and specific to the tool's purpose.
 
@@ -108,12 +116,12 @@ MCP best practice #3 says: _"Include examples in tool descriptions to demonstrat
 
 Per the [MCP annotation specification](https://modelcontextprotocol.io/legacy/concepts/tools#available-tool-annotations):
 
-| Annotation              | When to use                                                                                    |
-| ----------------------- | ---------------------------------------------------------------------------------------------- |
-| `readOnlyHint: true`    | Tools that only read/query (all code intelligence tools)                                       |
-| `destructiveHint: true` | Tools that modify files (refactoring tools in non-preview mode)                                |
-| `idempotentHint: true`  | Tools where repeated calls with same args have no additional effect (e.g., `organize_imports`) |
-| `openWorldHint: false`  | All tools in this server (tsserver operates on local files only)                               |
+| Annotation              | When to use                                                                                   |
+| ----------------------- | --------------------------------------------------------------------------------------------- |
+| `readOnlyHint: true`    | Tools that only read/query (all code intelligence tools)                                      |
+| `destructiveHint: true` | Tools that modify files (refactoring tools in non-preview mode)                               |
+| `idempotentHint: true`  | Tools where repeated calls with same args have no additional effect (e.g., `organizeImports`) |
+| `openWorldHint: false`  | All tools in this server (tsserver operates on local files only)                              |
 
 MCP best practice: _"Be accurate about side effects: Clearly indicate whether a tool modifies its environment and whether those modifications are destructive."_
 
@@ -155,6 +163,17 @@ ts-mcp-server/
 
 2. **Create the tool file** — `tools/{command-name}.ts`:
 
+   The tool name must be the exact `CommandTypes` string value. Look it up:
+
+   ```
+   // In node_modules/typescript/lib/typescript.d.ts:
+   enum CommandTypes {
+     CompletionInfo = "completionInfo",  // <-- use this string as the tool name
+     GetCodeFixes = "getCodeFixes",      // <-- use this string
+     ...
+   }
+   ```
+
 ```typescript
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
@@ -165,7 +184,7 @@ import { open, send } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "tool_name",
+    "completionInfo", // exact CommandTypes string value
     {
       title: "Tool Title",
       description: "Description of what this tool does.",

@@ -7,7 +7,7 @@ import { open, send } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "completion_entry_details",
+    "completionEntryDetails",
     {
       title: "Completion Entry Details",
       description: `Get full details for specific completion entries. Follow-up to completion_info

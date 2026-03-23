@@ -7,7 +7,7 @@ import { open, send } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "find_all_references",
+    "references",
     {
       title: "Find All References",
       description:

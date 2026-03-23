@@ -7,7 +7,7 @@ import { open, send } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "get_outlining_spans",
+    "getOutliningSpans",
     {
       title: "Get Outlining Spans",
       description: `Get code folding regions for a file. Returns the hierarchical structure of code blocks

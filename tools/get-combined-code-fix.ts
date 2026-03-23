@@ -7,7 +7,7 @@ import { open, send, writeEdits } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "apply_code_fix",
+    "getCombinedCodeFix",
     {
       title: "Apply Code Fix",
       description: `Apply all instances of a specific code fix across a file. For example,

@@ -7,7 +7,7 @@ import { open, send } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "todo_comments",
+    "todoComments",
     {
       title: "Todo Comments",
       description: `Find all TODO, FIXME, HACK, and other configured comment markers in a file.

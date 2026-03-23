@@ -7,7 +7,7 @@ import { open, send } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "provide_inlay_hints",
+    "provideInlayHints",
     {
       title: "Provide Inlay Hints",
       description: `Get inlay hints (inline type annotations) for a range. Shows inferred types,

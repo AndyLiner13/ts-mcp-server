@@ -7,7 +7,7 @@ import { open, send, writeEdits } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "rename_symbol",
+    "rename",
     {
       title: "Rename Symbol",
       description:

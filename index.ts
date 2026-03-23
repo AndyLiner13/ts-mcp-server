@@ -11,9 +11,9 @@ import { register as extractConstant } from "./tools/extract-constant.js";
 import { register as extractFunction } from "./tools/extract-function.js";
 import { register as extractType } from "./tools/extract-type.js";
 import { register as fileReferences } from "./tools/file-references.js";
-import { register as findAllReferences } from "./tools/find-all-references.js";
+import { register as references } from "./tools/references.js";
 import { register as getApplicableRefactors } from "./tools/get-applicable-refactors.js";
-import { register as applyCodeFix } from "./tools/apply-code-fix.js";
+import { register as getCombinedCodeFix } from "./tools/get-combined-code-fix.js";
 import { register as getCodeFixes } from "./tools/get-code-fixes.js";
 import { register as getDiagnostics } from "./tools/get-diagnostics.js";
 import { register as getOutliningSpans } from "./tools/get-outlining-spans.js";
@@ -30,8 +30,8 @@ import { register as provideCallHierarchyIncomingCalls } from "./tools/provide-c
 import { register as provideCallHierarchyOutgoingCalls } from "./tools/provide-call-hierarchy-outgoing-calls.js";
 import { register as provideInlayHints } from "./tools/provide-inlay-hints.js";
 import { register as quickinfo } from "./tools/quickinfo.js";
-import { register as renameFileOrDir } from "./tools/rename-file-or-dir.js";
-import { register as renameSymbol } from "./tools/rename-symbol.js";
+import { register as getEditsForFileRename } from "./tools/get-edits-for-file-rename.js";
+import { register as rename } from "./tools/rename.js";
 import { register as signatureHelp } from "./tools/signature-help.js";
 import { register as todoComments } from "./tools/todo-comments.js";
 import { register as typeDefinition } from "./tools/type-definition.js";
@@ -41,10 +41,10 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
-renameFileOrDir(server);
-renameSymbol(server);
+getEditsForFileRename(server);
+rename(server);
 getDiagnostics(server);
-findAllReferences(server);
+references(server);
 organizeImports(server);
 getCodeFixes(server);
 extractFunction(server);
@@ -72,7 +72,7 @@ getApplicableRefactors(server);
 docCommentTemplate(server);
 getOutliningSpans(server);
 provideInlayHints(server);
-applyCodeFix(server);
+getCombinedCodeFix(server);
 todoComments(server);
 
 const transport = new StdioServerTransport();

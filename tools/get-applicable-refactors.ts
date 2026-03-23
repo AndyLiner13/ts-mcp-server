@@ -7,7 +7,7 @@ import { open, send } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "get_applicable_refactors",
+    "getApplicableRefactors",
     {
       title: "Get Applicable Refactors",
       description: `Discover what refactorings are available at a position or selection. Use before

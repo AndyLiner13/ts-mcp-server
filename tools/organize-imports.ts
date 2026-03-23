@@ -7,7 +7,7 @@ import { open, send, writeEdits } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "organize_imports",
+    "organizeImports",
     {
       title: "Organize Imports",
       description:

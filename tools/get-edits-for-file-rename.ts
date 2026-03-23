@@ -8,7 +8,7 @@ import { open, send, writeEdits } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "rename_file_or_dir",
+    "getEditsForFileRename",
     {
       title: "Rename / Move File or Folder",
       description:

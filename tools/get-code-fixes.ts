@@ -7,7 +7,7 @@ import { open, send } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "get_code_fixes",
+    "getCodeFixes",
     {
       title: "Get Code Fixes",
       description:

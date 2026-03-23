@@ -67,20 +67,21 @@ Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over N
 
 **Refactoring tools:**
 
-| Tool                  | tsserver command(s)                                     |
-| --------------------- | ------------------------------------------------------- |
-| `rename_symbol`       | `rename-full` → `renameLocations-full`                  |
-| `rename_file_or_dir`  | `getEditsForFileRename-full`                            |
-| `find_all_references` | `references`                                            |
-| `get_diagnostics`     | `semanticDiagnosticsSync` + `suggestionDiagnosticsSync` |
-| `organize_imports`    | `organizeImports-full`                                  |
-| `get_code_fixes`      | `getCodeFixes`                                          |
-| `extract_function`    | `getEditsForRefactor-full`                              |
-| `extract_constant`    | `getEditsForRefactor-full`                              |
-| `extract_type`        | `getEditsForRefactor-full`                              |
-| `infer_return_type`   | `getEditsForRefactor-full`                              |
-| `move_symbol`         | `getEditsForRefactor-full`                              |
-| `inline_variable`     | `getEditsForRefactor-full`                              |
+| Tool                    | tsserver command(s)                                     |
+| ----------------------- | ------------------------------------------------------- |
+| `rename`                | `rename-full` → `renameLocations-full`                  |
+| `getEditsForFileRename` | `getEditsForFileRename-full`                            |
+| `references`            | `references`                                            |
+| `get_diagnostics`       | `semanticDiagnosticsSync` + `suggestionDiagnosticsSync` |
+| `organizeImports`       | `organizeImports-full`                                  |
+| `getCodeFixes`          | `getCodeFixes`                                          |
+| `getCombinedCodeFix`    | `getCombinedCodeFix`                                    |
+| `extract_function`      | `getEditsForRefactor-full`                              |
+| `extract_constant`      | `getEditsForRefactor-full`                              |
+| `extract_type`          | `getEditsForRefactor-full`                              |
+| `infer_return_type`     | `getEditsForRefactor-full`                              |
+| `move_symbol`           | `getEditsForRefactor-full`                              |
+| `inline_variable`       | `getEditsForRefactor-full`                              |
 
 **Code intelligence tools:**
 
@@ -97,11 +98,15 @@ Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over N
 | `provideCallHierarchyIncomingCalls` | `provideCallHierarchyIncomingCalls` |
 | `provideCallHierarchyOutgoingCalls` | `provideCallHierarchyOutgoingCalls` |
 | `projectInfo`                       | `projectInfo`                       |
-| `completion_info`                   | `completionInfo`                    |
-| `completion_entry_details`          | `completionEntryDetails`            |
-| `signature_help`                    | `signatureHelp`                     |
-| `document_highlights`               | `documentHighlights`                |
-| `get_applicable_refactors`          | `getApplicableRefactors`            |
+| `completionInfo`                    | `completionInfo`                    |
+| `completionEntryDetails`            | `completionEntryDetails`            |
+| `signatureHelp`                     | `signatureHelp`                     |
+| `documentHighlights`                | `documentHighlights`                |
+| `getApplicableRefactors`            | `getApplicableRefactors`            |
+| `getOutliningSpans`                 | `getOutliningSpans`                 |
+| `todoComments`                      | `todoComments`                      |
+| `docCommentTemplate`                | `docCommentTemplate`                |
+| `provideInlayHints`                 | `provideInlayHints`                 |
 
 There is no regex, no custom path resolution, no heuristics, no output formatting. The TypeScript compiler does all the work.
 
@@ -147,7 +152,7 @@ Add `ts-mcp-server` to your client's MCP configuration.
 
 ## Tool Reference
 
-### `rename_symbol`
+### `rename`
 
 Rename a TypeScript/JavaScript symbol and update all references across the project.
 
@@ -162,15 +167,15 @@ Rename a TypeScript/JavaScript symbol and update all references across the proje
 **Examples:**
 
 ```
-rename_symbol  file="src/utils/helpers.ts"  line=5  offset=17  newName="formatCurrency"
-rename_symbol  file="src/components/Button.tsx"  line=10  offset=17  newName="PrimaryButton"
-rename_symbol  file="src/types.ts"  line=3  offset=11  newName="UserProfile"
-rename_symbol  file="src/utils/helpers.ts"  line=5  offset=17  newName="formatCurrency"  preview=true
+rename  file="src/utils/helpers.ts"  line=5  offset=17  newName="formatCurrency"
+rename  file="src/components/Button.tsx"  line=10  offset=17  newName="PrimaryButton"
+rename  file="src/types.ts"  line=3  offset=11  newName="UserProfile"
+rename  file="src/utils/helpers.ts"  line=5  offset=17  newName="formatCurrency"  preview=true
 ```
 
 ---
 
-### `rename_file_or_dir`
+### `getEditsForFileRename`
 
 Rename or move a TypeScript/JavaScript file or folder and update all import paths across the project.
 
@@ -183,15 +188,15 @@ Rename or move a TypeScript/JavaScript file or folder and update all import path
 **Examples:**
 
 ```
-rename_file_or_dir  from="src/utils/helpers.ts"  to="src/utils/string-helpers.ts"
-rename_file_or_dir  from="src/Button.tsx"  to="src/components/ui/Button.tsx"
-rename_file_or_dir  from="src/components/primitives"  to="src/components/ui"
-rename_file_or_dir  from="src/old-name.ts"  to="src/new-name.ts"  preview=true
+getEditsForFileRename  from="src/utils/helpers.ts"  to="src/utils/string-helpers.ts"
+getEditsForFileRename  from="src/Button.tsx"  to="src/components/ui/Button.tsx"
+getEditsForFileRename  from="src/components/primitives"  to="src/components/ui"
+getEditsForFileRename  from="src/old-name.ts"  to="src/new-name.ts"  preview=true
 ```
 
 ---
 
-### `find_all_references`
+### `references`
 
 Find all usages of a symbol across the project.
 
@@ -204,8 +209,8 @@ Find all usages of a symbol across the project.
 **Examples:**
 
 ```
-find_all_references  file="src/utils/helpers.ts"  line=5  offset=17
-find_all_references  file="src/types.ts"  line=3  offset=11
+references  file="src/utils/helpers.ts"  line=5  offset=17
+references  file="src/types.ts"  line=3  offset=11
 ```
 
 ---
@@ -229,7 +234,7 @@ get_diagnostics  file="src/components/Button.tsx"
 
 ---
 
-### `organize_imports`
+### `organizeImports`
 
 Sort, coalesce, and remove unused imports in a file.
 
@@ -241,13 +246,13 @@ Sort, coalesce, and remove unused imports in a file.
 **Examples:**
 
 ```
-organize_imports  file="src/utils/helpers.ts"
-organize_imports  file="src/components/Button.tsx"  preview=true
+organizeImports  file="src/utils/helpers.ts"
+organizeImports  file="src/components/Button.tsx"  preview=true
 ```
 
 ---
 
-### `get_code_fixes`
+### `getCodeFixes`
 
 Get available code fixes for specific error codes at a range in a file. Use `get_diagnostics` first to discover error codes and ranges, then pass them here.
 
@@ -264,17 +269,17 @@ Get available code fixes for specific error codes at a range in a file. Use `get
 
 ```
 # Get fixes for a "Cannot find name" error (code 2304) at line 10
-get_code_fixes  file="src/app.ts"  startLine=10  startOffset=1  endLine=10  endOffset=20  errorCodes=[2304]
+getCodeFixes  file="src/app.ts"  startLine=10  startOffset=1  endLine=10  endOffset=20  errorCodes=[2304]
 
 # Get fixes for multiple error codes
-get_code_fixes  file="src/app.ts"  startLine=5  startOffset=1  endLine=5  endOffset=30  errorCodes=[2304, 2552]
+getCodeFixes  file="src/app.ts"  startLine=5  startOffset=1  endLine=5  endOffset=30  errorCodes=[2304, 2552]
 ```
 
 ---
 
 ### `extract_function`
 
-Extract a selected code range into a new function. TypeScript auto-detects parameters and return type. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename_symbol` to give the function a meaningful name.
+Extract a selected code range into a new function. TypeScript auto-detects parameters and return type. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename` to give the function a meaningful name.
 
 | Parameter     | Type      | Required | Description                                                  |
 | ------------- | --------- | -------- | ------------------------------------------------------------ |
@@ -299,7 +304,7 @@ extract_function  file="src/app.ts"  startLine=10  startOffset=1  endLine=15  en
 
 ### `extract_constant`
 
-Extract a selected expression into a named constant. TypeScript infers the type. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename_symbol` to give the constant a meaningful name.
+Extract a selected expression into a named constant. TypeScript infers the type. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename` to give the constant a meaningful name.
 
 | Parameter     | Type      | Required | Description                                                  |
 | ------------- | --------- | -------- | ------------------------------------------------------------ |
@@ -376,7 +381,7 @@ inline_variable  file="src/app.ts"  line=12  offset=7  preview=true
 
 ### `extract_type`
 
-Extract an inline type annotation into a named type alias. Select the type span to extract. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename_symbol` to give the type a meaningful name.
+Extract an inline type annotation into a named type alias. Select the type span to extract. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename` to give the type a meaningful name.
 
 | Parameter     | Type      | Required | Description                                                  |
 | ------------- | --------- | -------- | ------------------------------------------------------------ |
@@ -630,7 +635,7 @@ projectInfo  file="src/app.ts"  needFileNameList=false
 
 ---
 
-### `completion_info`
+### `completionInfo`
 
 Get autocomplete suggestions at a position. Returns all possible completions with their kinds, sort text, and insert text. Useful for understanding what symbols, methods, or properties are available at a location.
 
@@ -645,16 +650,16 @@ Get autocomplete suggestions at a position. Returns all possible completions wit
 **Examples:**
 
 ```
-completion_info  file="src/app.ts"  line=10  offset=15
-completion_info  file="src/app.ts"  line=10  offset=15  prefix="get"
-completion_info  file="src/app.ts"  line=10  offset=15  triggerCharacter="."
+completionInfo  file="src/app.ts"  line=10  offset=15
+completionInfo  file="src/app.ts"  line=10  offset=15  prefix="get"
+completionInfo  file="src/app.ts"  line=10  offset=15  triggerCharacter="."
 ```
 
 ---
 
-### `completion_entry_details`
+### `completionEntryDetails`
 
-Get full details for specific completion entries — documentation, full type signature, JSDoc tags, and code actions (like auto-imports). Use as a follow-up to `completion_info`.
+Get full details for specific completion entries — documentation, full type signature, JSDoc tags, and code actions (like auto-imports). Use as a follow-up to `completionInfo`.
 
 | Parameter    | Type       | Required | Description                                    |
 | ------------ | ---------- | -------- | ---------------------------------------------- |
@@ -666,13 +671,13 @@ Get full details for specific completion entries — documentation, full type si
 **Examples:**
 
 ```
-completion_entry_details  file="src/app.ts"  line=10  offset=15  entryNames=["map","filter"]
-completion_entry_details  file="src/app.ts"  line=5  offset=10  entryNames=["useState"]
+completionEntryDetails  file="src/app.ts"  line=10  offset=15  entryNames=["map","filter"]
+completionEntryDetails  file="src/app.ts"  line=5  offset=10  entryNames=["useState"]
 ```
 
 ---
 
-### `signature_help`
+### `signatureHelp`
 
 Get function/method signature information at a call site. Returns parameter names, types, and documentation for each overload. Use when the cursor is inside function call parentheses.
 
@@ -686,15 +691,15 @@ Get function/method signature information at a call site. Returns parameter name
 **Examples:**
 
 ```
-signature_help  file="src/app.ts"  line=12  offset=20
-signature_help  file="src/app.ts"  line=12  offset=20  triggerReason={"kind":"invoked"}
+signatureHelp  file="src/app.ts"  line=12  offset=20
+signatureHelp  file="src/app.ts"  line=12  offset=20  triggerReason={"kind":"invoked"}
 ```
 
 ---
 
-### `document_highlights`
+### `documentHighlights`
 
-Find all occurrences of a symbol within a file (or set of files). Distinguishes between read and write references. More efficient than `find_all_references` when you only need local occurrences.
+Find all occurrences of a symbol within a file (or set of files). Distinguishes between read and write references. More efficient than `references` when you only need local occurrences.
 
 | Parameter       | Type       | Required | Description                             |
 | --------------- | ---------- | -------- | --------------------------------------- |
@@ -706,13 +711,13 @@ Find all occurrences of a symbol within a file (or set of files). Distinguishes 
 **Examples:**
 
 ```
-document_highlights  file="src/app.ts"  line=10  offset=5
-document_highlights  file="src/app.ts"  line=10  offset=5  filesToSearch=["src/app.ts","src/utils.ts"]
+documentHighlights  file="src/app.ts"  line=10  offset=5
+documentHighlights  file="src/app.ts"  line=10  offset=5  filesToSearch=["src/app.ts","src/utils.ts"]
 ```
 
 ---
 
-### `get_applicable_refactors`
+### `getApplicableRefactors`
 
 Discover what refactorings are available at a position or selection. Use before attempting a refactor to see what's possible. Returns a list of available refactors with their action names and descriptions.
 
@@ -728,8 +733,8 @@ Discover what refactorings are available at a position or selection. Use before 
 **Examples:**
 
 ```
-get_applicable_refactors  file="src/app.ts"  startLine=10  startOffset=1  endLine=15  endOffset=1
-get_applicable_refactors  file="src/app.ts"  startLine=8  startOffset=12  endLine=8  endOffset=35
+getApplicableRefactors  file="src/app.ts"  startLine=10  startOffset=1  endLine=15  endOffset=1
+getApplicableRefactors  file="src/app.ts"  startLine=8  startOffset=12  endLine=8  endOffset=35
 ```
 
 ## Supported Languages & Frameworks

@@ -7,7 +7,7 @@ import { open, send } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "document_highlights",
+    "documentHighlights",
     {
       title: "Document Highlights",
       description: `Find all occurrences of a symbol within a file (or set of files). Distinguishes

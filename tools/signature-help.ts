@@ -7,7 +7,7 @@ import { open, send } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "signature_help",
+    "signatureHelp",
     {
       title: "Signature Help",
       description: `Get function/method signature information at a call site. Returns parameter names,

@@ -7,7 +7,7 @@ import { open, send } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "completion_info",
+    "completionInfo",
     {
       title: "Completion Info",
       description: `Get autocomplete suggestions at a position. Returns all possible completions

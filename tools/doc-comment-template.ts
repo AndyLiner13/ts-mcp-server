@@ -7,7 +7,7 @@ import { open, send } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "doc_comment_template",
+    "docCommentTemplate",
     {
       title: "Doc Comment Template",
       description: `Generate a JSDoc comment template for a function, method, or class at a position.
