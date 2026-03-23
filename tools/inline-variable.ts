@@ -5,7 +5,7 @@ import { applyRefactor } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "inline_variable",
+    "inlineVariable",
     {
       title: "Inline Variable",
       description:

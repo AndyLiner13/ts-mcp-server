@@ -5,7 +5,7 @@ import { applyRefactor } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "infer_return_type",
+    "inferReturnType",
     {
       title: "Infer Return Type",
       description:

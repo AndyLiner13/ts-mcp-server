@@ -5,7 +5,7 @@ import { applyRefactor } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "extract_function",
+    "extractFunction",
     {
       title: "Extract Function",
       description:

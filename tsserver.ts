@@ -108,8 +108,8 @@ export async function writeEdits(
   return updated;
 }
 
-// ── Refactor helper (shared by extract_function, extract_constant,
-//    move_symbol, inline_variable, and any future refactor tools) ─
+// ── Refactor helper (shared by extractFunction, extractConstant,
+//    moveSymbol, inlineVariable, and any future refactor tools) ─
 //
 // Wraps the getEditsForRefactor-full → writeEdits flow.
 // Each refactor tool only needs to supply the protocol args.

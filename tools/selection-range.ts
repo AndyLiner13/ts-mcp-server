@@ -7,40 +7,43 @@ import { open, send } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "getCombinedCodeFix",
+    "selectionRange",
     {
-      title: "Get Combined Code Fix",
-      description: `Get a combined code fix that applies all instances of a fix across a file in one action.
-For example, "Add all missing imports" or "Remove all unused variables". Returns the full set
-of file edits as a CombinedCodeActions response. Use getCodeFixes first to discover available
-fixId values, then pass the fixId here to get the combined fix for the whole file.`,
+      title: "Selection Range",
+      description: `Get semantically meaningful selection ranges for smart expand/shrink selection.
+Returns nested spans that represent progressively larger syntactic constructs.
+Useful for structural code selection (e.g., select expression → statement → block → function).`,
       annotations: {
         readOnlyHint: true,
         openWorldHint: false,
       },
       inputSchema: z.object({
         file: z.string().describe("File path (absolute or relative to cwd)"),
-        fixId: z
-          .string()
-          .describe(
-            'The fixId from a code fix (e.g., "fixMissingImport", "unusedIdentifier", "inferFromUsage")',
-          ),
+        locations: z
+          .array(
+            z.object({
+              line: z.number().int().positive().describe("1-based line number"),
+              offset: z
+                .number()
+                .int()
+                .positive()
+                .describe("1-based column offset"),
+            }),
+          )
+          .describe("Array of positions to get selection ranges for"),
       }),
     },
-    async ({ file, fixId }): Promise<CallToolResult> => {
+    async ({ file, locations }): Promise<CallToolResult> => {
       try {
         const filePath: string = resolve(file);
         await open(filePath);
 
         const body = await send<
-          ts.server.protocol.CombinedCodeActions,
-          ts.server.protocol.GetCombinedCodeFixRequestArgs
-        >(ts.server.protocol.CommandTypes.GetCombinedCodeFix, {
-          scope: {
-            type: "file",
-            args: { file: filePath },
-          },
-          fixId,
+          ts.server.protocol.SelectionRange[],
+          ts.server.protocol.SelectionRangeRequestArgs
+        >(ts.server.protocol.CommandTypes.SelectionRange, {
+          file: filePath,
+          locations,
         });
 
         return {

@@ -53,24 +53,6 @@ Follow the [Model Context Protocol specification](https://modelcontextprotocol.i
 - **Must match the exact `CommandTypes` string value** from `ts.server.protocol.CommandTypes` (camelCase, as defined in `typescript.d.ts`)
 - Examples: `references`, `completionInfo`, `getCodeFixes`, `organizeImports`, `rename`, `getEditsForFileRename`
 
-**Exceptions — tools that do NOT map 1:1 to a single tsserver command:**
-
-A small number of tools combine or parameterize multiple tsserver calls. These use a descriptive name instead:
-
-| Tool name           | Reason                                                                                  |
-| ------------------- | --------------------------------------------------------------------------------------- |
-| `get_diagnostics`   | Combines `semanticDiagnosticsSync` + `suggestionDiagnosticsSync` into one call          |
-| `extract_function`  | Wraps `getEditsForRefactor` with refactor=`"Extract Symbol"`, action=`function_scope_*` |
-| `extract_constant`  | Wraps `getEditsForRefactor` with refactor=`"Extract Symbol"`, action=`constant_scope_*` |
-| `extract_type`      | Wraps `getEditsForRefactor` with refactor=`"Extract Symbol"`, action=`Extract type`     |
-| `inline_variable`   | Wraps `getEditsForRefactor` with refactor=`"Inline Variable"`                           |
-| `move_symbol`       | Wraps `getEditsForRefactor` with refactor=`"Move..."`                                   |
-| `infer_return_type` | Wraps `getEditsForRefactor` with refactor=`"Infer function return type"`                |
-
-All other tools use the **exact** tsserver command name — no snake_case, no prefixes, no suffixes.
-
-**Key principle:** The tool name is the tsserver `CommandTypes` string value. Look it up in `node_modules/typescript/lib/typescript.d.ts` under `enum CommandTypes`.
-
 ### Tool Title (`title`)
 
 - Human-readable display name

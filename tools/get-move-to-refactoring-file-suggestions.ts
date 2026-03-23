@@ -7,13 +7,15 @@ import { open, send } from "../tsserver.js";
 
 export function register(server: McpServer): void {
   server.registerTool(
-    "getCodeFixes",
+    "getMoveToRefactoringFileSuggestions",
     {
-      title: "Get Code Fixes",
-      description:
-        "Get available code fixes for specific error codes at a range in a TypeScript/JavaScript file. Returns the raw list of code actions tsserver suggests for the given diagnostics. Use getDiagnostics first to discover error codes and ranges, then pass them here.",
+      title: "Get Move To Refactoring File Suggestions",
+      description: `Get suggested target files when moving a symbol to another file.
+Returns both a suggested new file name and existing files that would be good
+destinations. Use this before moveSymbol to choose the best target location.`,
       annotations: {
         readOnlyHint: true,
+        openWorldHint: false,
       },
       inputSchema: z.object({
         file: z.string().describe("File path (absolute or relative to cwd)"),
@@ -22,16 +24,9 @@ export function register(server: McpServer): void {
           .number()
           .int()
           .positive()
-          .describe("1-based start character offset"),
+          .describe("1-based start column"),
         endLine: z.number().int().positive().describe("1-based end line"),
-        endOffset: z
-          .number()
-          .int()
-          .positive()
-          .describe("1-based end character offset"),
-        errorCodes: z
-          .array(z.number().int())
-          .describe("Diagnostic error codes to get fixes for"),
+        endOffset: z.number().int().positive().describe("1-based end column"),
       }),
     },
     async ({
@@ -40,22 +35,20 @@ export function register(server: McpServer): void {
       startOffset,
       endLine,
       endOffset,
-      errorCodes,
     }): Promise<CallToolResult> => {
       try {
         const filePath: string = resolve(file);
         await open(filePath);
 
         const body = await send<
-          readonly ts.server.protocol.CodeAction[],
-          ts.server.protocol.CodeFixRequestArgs
-        >(ts.server.protocol.CommandTypes.GetCodeFixes, {
+          ts.server.protocol.GetMoveToRefactoringFileSuggestions["body"],
+          ts.server.protocol.GetMoveToRefactoringFileSuggestionsRequestArgs
+        >(ts.server.protocol.CommandTypes.GetMoveToRefactoringFileSuggestions, {
           file: filePath,
           startLine,
           startOffset,
           endLine,
           endOffset,
-          errorCodes,
         });
 
         return {
@@ -63,8 +56,13 @@ export function register(server: McpServer): void {
         };
       } catch (err: unknown) {
         return {
-          content: [{ type: "text", text: String(err) }],
           isError: true,
+          content: [
+            {
+              type: "text",
+              text: err instanceof Error ? err.message : String(err),
+            },
+          ],
         };
       }
     },

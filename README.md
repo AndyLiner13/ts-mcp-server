@@ -14,9 +14,9 @@ AI coding assistants can read and write code, but they struggle with **structura
 
 ## Features
 
-- **28 tools** — each a 1:1 mapping to a native `tsserver` protocol command
+- **38 tools** — each a 1:1 mapping to a native `tsserver` protocol command
 
-### Refactoring (12 tools)
+### Refactoring (14 tools)
 
 - **Rename symbols** — variables, functions, classes, types, properties, interfaces, enums — all references updated across every file
 - **Rename / move files and folders** — all import paths updated automatically
@@ -27,15 +27,19 @@ AI coding assistants can read and write code, but they struggle with **structura
 - **Move symbol** — move top-level declarations to another file, all imports rewired automatically
 - **Inline variable** — replace all references with the variable's initializer and delete the declaration
 - **Organize imports** — sort, coalesce, and remove unused imports
+- **Format** — format a range of code according to TypeScript's formatting rules
 - **Get code fixes** — retrieve available auto-fixes for specific diagnostics (missing imports, type mismatches, etc.)
+- **Get combined code fix** — apply a fix-all action for a specific error code across a file
 - **Get diagnostics** — retrieve type errors, warnings, and suggestions for any file
 - **Find all references** — locate every usage of a symbol across the project
 
-### Code Intelligence (16 tools)
+### Code Intelligence (24 tools)
 
 - **Quick info** — full type information, documentation, and JSDoc tags for any symbol (hover info)
 - **Navigation tree** — complete hierarchical structure of a file (all declarations and their nesting)
 - **Go to definition** — jump to where a symbol is declared
+- **Definition and bound span** — like definition, but also returns the text span of the queried symbol
+- **Find source definition** — navigate to actual TypeScript source instead of `.d.ts` declaration files
 - **Go to type definition** — jump to the type's definition, not the variable's declaration
 - **Go to implementation** — find concrete implementations of an interface or abstract class
 - **Navigate to symbol** — workspace-wide symbol search by name
@@ -49,6 +53,12 @@ AI coding assistants can read and write code, but they struggle with **structura
 - **Signature help** — function parameter info and overloads at a call site
 - **Document highlights** — all occurrences of a symbol within a file, with read/write distinction
 - **Get applicable refactors** — discover what refactorings are available at a position or selection
+- **Selection range** — get semantically meaningful selection ranges for smart expand/shrink selection
+- **Move to refactoring suggestions** — get suggested target files when moving a symbol
+- **Doc comment template** — generate JSDoc comment template for a function/method
+- **Outlining spans** — get foldable regions in a file
+- **Inlay hints** — get inlay hints (parameter names, inferred types) for a range
+- **TODO comments** — find all TODO/FIXME/HACK comments in a file
 
 ### Design Principles
 
@@ -72,41 +82,46 @@ Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over N
 | `rename`                | `rename-full` → `renameLocations-full`                  |
 | `getEditsForFileRename` | `getEditsForFileRename-full`                            |
 | `references`            | `references`                                            |
-| `get_diagnostics`       | `semanticDiagnosticsSync` + `suggestionDiagnosticsSync` |
+| `getDiagnostics`        | `semanticDiagnosticsSync` + `suggestionDiagnosticsSync` |
 | `organizeImports`       | `organizeImports-full`                                  |
 | `getCodeFixes`          | `getCodeFixes`                                          |
-| `getCombinedCodeFix`    | `getCombinedCodeFix`                                    |
-| `extract_function`      | `getEditsForRefactor-full`                              |
-| `extract_constant`      | `getEditsForRefactor-full`                              |
-| `extract_type`          | `getEditsForRefactor-full`                              |
-| `infer_return_type`     | `getEditsForRefactor-full`                              |
-| `move_symbol`           | `getEditsForRefactor-full`                              |
-| `inline_variable`       | `getEditsForRefactor-full`                              |
+| `extractFunction`       | `getEditsForRefactor-full`                              |
+| `extractConstant`       | `getEditsForRefactor-full`                              |
+| `extractType`           | `getEditsForRefactor-full`                              |
+| `inferReturnType`       | `getEditsForRefactor-full`                              |
+| `moveSymbol`            | `getEditsForRefactor-full`                              |
+| `inlineVariable`        | `getEditsForRefactor-full`                              |
+| `format`                | `format`                                                |
 
 **Code intelligence tools:**
 
-| Tool                                | tsserver command                    |
-| ----------------------------------- | ----------------------------------- |
-| `quickinfo`                         | `quickinfo`                         |
-| `navtree`                           | `navtree`                           |
-| `definition`                        | `definition`                        |
-| `typeDefinition`                    | `typeDefinition`                    |
-| `implementation`                    | `implementation`                    |
-| `navto`                             | `navto`                             |
-| `fileReferences`                    | `fileReferences`                    |
-| `prepareCallHierarchy`              | `prepareCallHierarchy`              |
-| `provideCallHierarchyIncomingCalls` | `provideCallHierarchyIncomingCalls` |
-| `provideCallHierarchyOutgoingCalls` | `provideCallHierarchyOutgoingCalls` |
-| `projectInfo`                       | `projectInfo`                       |
-| `completionInfo`                    | `completionInfo`                    |
-| `completionEntryDetails`            | `completionEntryDetails`            |
-| `signatureHelp`                     | `signatureHelp`                     |
-| `documentHighlights`                | `documentHighlights`                |
-| `getApplicableRefactors`            | `getApplicableRefactors`            |
-| `getOutliningSpans`                 | `getOutliningSpans`                 |
-| `todoComments`                      | `todoComments`                      |
-| `docCommentTemplate`                | `docCommentTemplate`                |
-| `provideInlayHints`                 | `provideInlayHints`                 |
+| Tool                                  | tsserver command                      |
+| ------------------------------------- | ------------------------------------- |
+| `quickinfo`                           | `quickinfo`                           |
+| `navtree`                             | `navtree`                             |
+| `definition`                          | `definition`                          |
+| `typeDefinition`                      | `typeDefinition`                      |
+| `implementation`                      | `implementation`                      |
+| `navto`                               | `navto`                               |
+| `fileReferences`                      | `fileReferences`                      |
+| `prepareCallHierarchy`                | `prepareCallHierarchy`                |
+| `provideCallHierarchyIncomingCalls`   | `provideCallHierarchyIncomingCalls`   |
+| `provideCallHierarchyOutgoingCalls`   | `provideCallHierarchyOutgoingCalls`   |
+| `projectInfo`                         | `projectInfo`                         |
+| `completionInfo`                      | `completionInfo`                      |
+| `completionEntryDetails`              | `completionEntryDetails`              |
+| `signatureHelp`                       | `signatureHelp`                       |
+| `documentHighlights`                  | `documentHighlights`                  |
+| `getApplicableRefactors`              | `getApplicableRefactors`              |
+| `getCombinedCodeFix`                  | `getCombinedCodeFix`                  |
+| `getOutliningSpans`                   | `getOutliningSpans`                   |
+| `todoComments`                        | `todoComments`                        |
+| `docCommentTemplate`                  | `docCommentTemplate`                  |
+| `provideInlayHints`                   | `provideInlayHints`                   |
+| `definitionAndBoundSpan`              | `definitionAndBoundSpan`              |
+| `findSourceDefinition`                | `findSourceDefinition`                |
+| `selectionRange`                      | `selectionRange`                      |
+| `getMoveToRefactoringFileSuggestions` | `getMoveToRefactoringFileSuggestions` |
 
 There is no regex, no custom path resolution, no heuristics, no output formatting. The TypeScript compiler does all the work.
 
@@ -215,7 +230,7 @@ references  file="src/types.ts"  line=3  offset=11
 
 ---
 
-### `get_diagnostics`
+### `getDiagnostics`
 
 Get all errors, warnings, and suggestions for a file. Returns semantic diagnostics and suggestion diagnostics as separate arrays.
 
@@ -226,8 +241,8 @@ Get all errors, warnings, and suggestions for a file. Returns semantic diagnosti
 **Examples:**
 
 ```
-get_diagnostics  file="src/utils/helpers.ts"
-get_diagnostics  file="src/components/Button.tsx"
+getDiagnostics  file="src/utils/helpers.ts"
+getDiagnostics  file="src/components/Button.tsx"
 ```
 
 > **Note:** Unused-code diagnostics (unused variables, unused imports) only appear if your `tsconfig.json` has `noUnusedLocals` and/or `noUnusedParameters` enabled.
@@ -254,7 +269,7 @@ organizeImports  file="src/components/Button.tsx"  preview=true
 
 ### `getCodeFixes`
 
-Get available code fixes for specific error codes at a range in a file. Use `get_diagnostics` first to discover error codes and ranges, then pass them here.
+Get available code fixes for specific error codes at a range in a file. Use `getDiagnostics` first to discover error codes and ranges, then pass them here.
 
 | Parameter     | Type       | Required | Description                                |
 | ------------- | ---------- | -------- | ------------------------------------------ |
@@ -277,7 +292,28 @@ getCodeFixes  file="src/app.ts"  startLine=5  startOffset=1  endLine=5  endOffse
 
 ---
 
-### `extract_function`
+### `getCombinedCodeFix`
+
+Get a combined code fix that applies all instances of a fix across a file in one action. Returns the full set of file edits as a `CombinedCodeActions` response. Use `getCodeFixes` first to discover available `fixId` values, then pass the `fixId` here to get the combined fix for the whole file.
+
+| Parameter | Type     | Required | Description                                                                                      |
+| --------- | -------- | -------- | ------------------------------------------------------------------------------------------------ |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd)                                                          |
+| `fixId`   | `string` | ✅       | The fixId from a code fix (e.g., `"fixMissingImport"`, `"unusedIdentifier"`, `"inferFromUsage"`) |
+
+**Examples:**
+
+```
+# Get the combined "add all missing imports" fix for a file
+getCombinedCodeFix  file="src/app.ts"  fixId="fixMissingImport"
+
+# Get the combined "remove all unused variables" fix for a file
+getCombinedCodeFix  file="src/app.ts"  fixId="unusedIdentifier"
+```
+
+---
+
+### `extractFunction`
 
 Extract a selected code range into a new function. TypeScript auto-detects parameters and return type. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename` to give the function a meaningful name.
 
@@ -294,15 +330,15 @@ Extract a selected code range into a new function. TypeScript auto-detects param
 
 ```
 # Extract lines 10-15 into a function
-extract_function  file="src/app.ts"  startLine=10  startOffset=1  endLine=15  endOffset=1
+extractFunction  file="src/app.ts"  startLine=10  startOffset=1  endLine=15  endOffset=1
 
 # Preview the extraction
-extract_function  file="src/app.ts"  startLine=10  startOffset=1  endLine=15  endOffset=1  preview=true
+extractFunction  file="src/app.ts"  startLine=10  startOffset=1  endLine=15  endOffset=1  preview=true
 ```
 
 ---
 
-### `extract_constant`
+### `extractConstant`
 
 Extract a selected expression into a named constant. TypeScript infers the type. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename` to give the constant a meaningful name.
 
@@ -319,15 +355,15 @@ Extract a selected expression into a named constant. TypeScript infers the type.
 
 ```
 # Extract an expression into a constant
-extract_constant  file="src/app.ts"  startLine=8  startOffset=12  endLine=8  endOffset=35
+extractConstant  file="src/app.ts"  startLine=8  startOffset=12  endLine=8  endOffset=35
 
 # Preview the extraction
-extract_constant  file="src/app.ts"  startLine=8  startOffset=12  endLine=8  endOffset=35  preview=true
+extractConstant  file="src/app.ts"  startLine=8  startOffset=12  endLine=8  endOffset=35  preview=true
 ```
 
 ---
 
-### `move_symbol`
+### `moveSymbol`
 
 Move top-level declarations (functions, classes, types, constants) to another file. All imports across the project are rewired automatically. If the target file doesn't exist, tsserver creates it.
 
@@ -345,18 +381,18 @@ Move top-level declarations (functions, classes, types, constants) to another fi
 
 ```
 # Move a function to a utility file
-move_symbol  file="src/app.ts"  startLine=20  startOffset=1  endLine=35  endOffset=2  targetFile="src/utils/helpers.ts"
+moveSymbol  file="src/app.ts"  startLine=20  startOffset=1  endLine=35  endOffset=2  targetFile="src/utils/helpers.ts"
 
 # Move a type to a shared types file
-move_symbol  file="src/components/Button.tsx"  startLine=1  startOffset=1  endLine=5  endOffset=2  targetFile="src/types.ts"
+moveSymbol  file="src/components/Button.tsx"  startLine=1  startOffset=1  endLine=5  endOffset=2  targetFile="src/types.ts"
 
 # Preview the move
-move_symbol  file="src/app.ts"  startLine=20  startOffset=1  endLine=35  endOffset=2  targetFile="src/utils/helpers.ts"  preview=true
+moveSymbol  file="src/app.ts"  startLine=20  startOffset=1  endLine=35  endOffset=2  targetFile="src/utils/helpers.ts"  preview=true
 ```
 
 ---
 
-### `inline_variable`
+### `inlineVariable`
 
 Inline a variable — replace all references with the variable's initializer and delete the declaration. Position must be on the variable name in its declaration or any usage.
 
@@ -371,15 +407,15 @@ Inline a variable — replace all references with the variable's initializer and
 
 ```
 # Inline a variable
-inline_variable  file="src/app.ts"  line=12  offset=7
+inlineVariable  file="src/app.ts"  line=12  offset=7
 
 # Preview the inlining
-inline_variable  file="src/app.ts"  line=12  offset=7  preview=true
+inlineVariable  file="src/app.ts"  line=12  offset=7  preview=true
 ```
 
 ---
 
-### `extract_type`
+### `extractType`
 
 Extract an inline type annotation into a named type alias. Select the type span to extract. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename` to give the type a meaningful name.
 
@@ -398,15 +434,15 @@ Extract an inline type annotation into a named type alias. Select the type span 
 # Extract an inline object type into a type alias
 # Given: function process(user: { id: number; name: string }) { ... }
 # Select the span "{ id: number; name: string }"
-extract_type  file="src/app.ts"  startLine=5  startOffset=26  endLine=5  endOffset=56
+extractType  file="src/app.ts"  startLine=5  startOffset=26  endLine=5  endOffset=56
 
 # Preview the extraction
-extract_type  file="src/app.ts"  startLine=5  startOffset=26  endLine=5  endOffset=56  preview=true
+extractType  file="src/app.ts"  startLine=5  startOffset=26  endLine=5  endOffset=56  preview=true
 ```
 
 ---
 
-### `infer_return_type`
+### `inferReturnType`
 
 Add an explicit return type annotation to a function, inferred by TypeScript. Position must be on the function name or declaration keyword (`function`, `async`, arrow function variable name).
 
@@ -423,10 +459,10 @@ Add an explicit return type annotation to a function, inferred by TypeScript. Po
 # Add return type to a function that currently has none
 # Given: function greet(name: string) { return `Hello, ${name}!`; }
 # After: function greet(name: string): string { return `Hello, ${name}!`; }
-infer_return_type  file="src/app.ts"  line=10  offset=10
+inferReturnType  file="src/app.ts"  line=10  offset=10
 
 # Preview the change
-infer_return_type  file="src/app.ts"  line=10  offset=10  preview=true
+inferReturnType  file="src/app.ts"  line=10  offset=10  preview=true
 ```
 
 ### `quickinfo`
@@ -735,6 +771,186 @@ Discover what refactorings are available at a position or selection. Use before 
 ```
 getApplicableRefactors  file="src/app.ts"  startLine=10  startOffset=1  endLine=15  endOffset=1
 getApplicableRefactors  file="src/app.ts"  startLine=8  startOffset=12  endLine=8  endOffset=35
+```
+
+---
+
+### `docCommentTemplate`
+
+Generate a JSDoc comment template for a function, method, or class at a position. Returns the template text with `@param`, `@returns`, etc. based on the function signature.
+
+| Parameter | Type     | Required | Description                             |
+| --------- | -------- | -------- | --------------------------------------- |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd) |
+| `line`    | `number` | ✅       | 1-based line number                     |
+| `offset`  | `number` | ✅       | 1-based character offset on the line    |
+
+**Examples:**
+
+```
+docCommentTemplate  file="src/utils/helpers.ts"  line=10  offset=1
+docCommentTemplate  file="src/services/api.ts"  line=25  offset=10
+```
+
+---
+
+### `getOutliningSpans`
+
+Get code folding regions for a file. Returns the hierarchical structure of code blocks including their kinds (comment, region, code, imports). Useful for understanding file structure and complexity.
+
+| Parameter | Type     | Required | Description                             |
+| --------- | -------- | -------- | --------------------------------------- |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd) |
+
+**Examples:**
+
+```
+getOutliningSpans  file="src/app.ts"
+getOutliningSpans  file="src/components/Button.tsx"
+```
+
+---
+
+### `provideInlayHints`
+
+Get inlay hints (inline type annotations) for a range. Shows inferred types, parameter names at call sites, and return types. Useful for understanding what TypeScript infers without explicit type annotations.
+
+| Parameter | Type     | Required | Description                               |
+| --------- | -------- | -------- | ----------------------------------------- |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd)   |
+| `start`   | `number` | ✅       | Start offset (0-based character position) |
+| `length`  | `number` | ✅       | Length of range in characters             |
+
+**Examples:**
+
+```
+# Get inlay hints for the first 1000 characters of a file
+provideInlayHints  file="src/app.ts"  start=0  length=1000
+
+# Get inlay hints for a specific range
+provideInlayHints  file="src/utils/helpers.ts"  start=500  length=200
+```
+
+---
+
+### `todoComments`
+
+Find all TODO, FIXME, HACK, and other configured comment markers in a file. Returns the location and text of each matching comment.
+
+| Parameter     | Type                                 | Required | Description                                                |
+| ------------- | ------------------------------------ | -------- | ---------------------------------------------------------- |
+| `file`        | `string`                             | ✅       | File path (absolute or relative to cwd)                    |
+| `descriptors` | `{text: string, priority: number}[]` | ✅       | Array of comment markers to search for (e.g., TODO, FIXME) |
+
+**Examples:**
+
+```
+# Find all TODO and FIXME comments
+todoComments  file="src/app.ts"  descriptors=[{"text":"TODO","priority":1},{"text":"FIXME","priority":0}]
+
+# Find TODO, FIXME, and HACK comments
+todoComments  file="src/app.ts"  descriptors=[{"text":"TODO","priority":2},{"text":"FIXME","priority":1},{"text":"HACK","priority":0}]
+```
+
+---
+
+### `definitionAndBoundSpan`
+
+Like `definition`, but also returns the text span of the symbol being queried. Useful for understanding exactly which characters constitute the symbol.
+
+| Parameter | Type     | Required | Description                             |
+| --------- | -------- | -------- | --------------------------------------- |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd) |
+| `line`    | `number` | ✅       | 1-based line number                     |
+| `offset`  | `number` | ✅       | 1-based character offset on the line    |
+
+**Examples:**
+
+```
+definitionAndBoundSpan  file="src/app.ts"  line=10  offset=5
+definitionAndBoundSpan  file="src/types.ts"  line=3  offset=11
+```
+
+---
+
+### `findSourceDefinition`
+
+Navigate to the actual TypeScript source instead of `.d.ts` declaration files. Useful when working with libraries that have source maps or when you want to see the implementation rather than just the type declarations.
+
+| Parameter | Type     | Required | Description                             |
+| --------- | -------- | -------- | --------------------------------------- |
+| `file`    | `string` | ✅       | File path (absolute or relative to cwd) |
+| `line`    | `number` | ✅       | 1-based line number                     |
+| `offset`  | `number` | ✅       | 1-based character offset on the line    |
+
+**Examples:**
+
+```
+findSourceDefinition  file="src/app.ts"  line=10  offset=5
+findSourceDefinition  file="src/services/api.ts"  line=3  offset=15
+```
+
+---
+
+### `selectionRange`
+
+Get semantically meaningful selection ranges for smart expand/shrink selection. Returns nested spans that represent progressively larger syntactic constructs (expression → statement → block → function).
+
+| Parameter   | Type                               | Required | Description                                    |
+| ----------- | ---------------------------------- | -------- | ---------------------------------------------- |
+| `file`      | `string`                           | ✅       | File path (absolute or relative to cwd)        |
+| `locations` | `{line: number, offset: number}[]` | ✅       | Array of positions to get selection ranges for |
+
+**Examples:**
+
+```
+selectionRange  file="src/app.ts"  locations=[{"line":10,"offset":5}]
+selectionRange  file="src/app.ts"  locations=[{"line":10,"offset":5},{"line":20,"offset":10}]
+```
+
+---
+
+### `format`
+
+Format a range of code according to TypeScript's formatting rules. Applies consistent indentation, spacing, and line breaks.
+
+| Parameter   | Type      | Required | Description                                                  |
+| ----------- | --------- | -------- | ------------------------------------------------------------ |
+| `file`      | `string`  | ✅       | File path (absolute or relative to cwd)                      |
+| `line`      | `number`  | ✅       | 1-based start line of the range                              |
+| `offset`    | `number`  | ✅       | 1-based start character offset                               |
+| `endLine`   | `number`  | ✅       | 1-based end line of the range                                |
+| `endOffset` | `number`  | ✅       | 1-based end character offset                                 |
+| `options`   | `object`  | —        | Formatting options (tabSize, indentSize, etc.)               |
+| `preview`   | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+
+**Examples:**
+
+```
+format  file="src/app.ts"  line=1  offset=1  endLine=50  endOffset=1
+format  file="src/app.ts"  line=10  offset=1  endLine=20  endOffset=1  preview=true
+format  file="src/app.ts"  line=1  offset=1  endLine=100  endOffset=1  options={"tabSize":4}
+```
+
+---
+
+### `getMoveToRefactoringFileSuggestions`
+
+Get suggested target files when moving a symbol to another file. Returns both a suggested new file name and existing files that would be good destinations. Use this before `moveSymbol` to choose the best target location.
+
+| Parameter     | Type     | Required | Description                             |
+| ------------- | -------- | -------- | --------------------------------------- |
+| `file`        | `string` | ✅       | File path (absolute or relative to cwd) |
+| `startLine`   | `number` | ✅       | 1-based start line of the declaration   |
+| `startOffset` | `number` | ✅       | 1-based start character offset          |
+| `endLine`     | `number` | ✅       | 1-based end line of the declaration     |
+| `endOffset`   | `number` | ✅       | 1-based end character offset            |
+
+**Examples:**
+
+```
+getMoveToRefactoringFileSuggestions  file="src/app.ts"  startLine=20  startOffset=1  endLine=35  endOffset=2
+getMoveToRefactoringFileSuggestions  file="src/components/Button.tsx"  startLine=1  startOffset=1  endLine=5  endOffset=2
 ```
 
 ## Supported Languages & Frameworks
