@@ -28,6 +28,7 @@ return {
 ```
 
 **Never:**
+
 - Filter, group, sort, or truncate the response
 - Add custom fields or metadata
 - Format or pretty-print beyond `JSON.stringify`
@@ -41,6 +42,87 @@ The only shared code is in `tsserver.ts`:
 - `open(file)` — Open a file in tsserver's project
 - `writeEdits(edits)` — Apply file edits to disk and reload
 - `applyRefactor(opts, preview)` — Shared helper for refactor tools only
+
+## Tool Definitions (MCP Best Practices)
+
+Follow the [Model Context Protocol specification](https://modelcontextprotocol.io/specification/2025-06-18/server/tools) and [MCP tool best practices](https://modelcontextprotocol.io/legacy/concepts/tools#best-practices) for all tool definitions.
+
+### Tool Name (`name`)
+
+- Unique identifier for the tool
+- Use `snake_case` for multi-word names (e.g., `find_all_references`, `rename_symbol`)
+- Align with tsserver's native naming where possible
+
+### Tool Title (`title`)
+
+- Human-readable display name
+- Short, descriptive, title-cased (e.g., `"Go to Definition"`, `"Extract Function"`)
+- Per MCP spec: _"Optional human-readable name of the tool for display purposes"_
+
+### Tool Description (`description`)
+
+Write descriptions **for LLMs**, not for protocol developers. The MCP spec says descriptions are _"Human-readable description of functionality"_ — but since tools are **model-controlled** (the LLM decides when to invoke them), the description must help the model understand:
+
+1. **What the tool does** — Lead with a clear, concise statement of the tool's purpose
+2. **When to use it** — Include context that helps the model choose the right tool (e.g., "The fundamental 'where is this thing declared?' query")
+3. **What it returns** — Describe the shape of the output so the model knows what to expect
+4. **Follow-up hints** — If the tool's output is commonly used as input to another tool, mention it (e.g., "The response includes renameFilename/renameLocation so you can follow up with rename_symbol")
+
+**Do NOT** copy tsserver TSDoc comments verbatim. They describe protocol mechanics ("value of command field is 'quickinfo'") rather than user/model intent. Write descriptions that are clear, action-oriented, and specific to the tool's purpose.
+
+MCP best practice #3 says: _"Include examples in tool descriptions to demonstrate how the model should use them."_ Use this when the tool's usage pattern is non-obvious.
+
+**Examples of good descriptions:**
+
+```
+"Get type information, documentation, and JSDoc tags for a symbol at a position.
+ Returns the hover info — kind, display string (full type signature), documentation,
+ and tags."
+
+"Rename a TypeScript/JavaScript symbol (variable, function, class, type, property, etc.)
+ and update all references across the project. Provide the file path and the 1-based
+ line/offset of any occurrence of the symbol."
+
+"Returns the file location(s) where a symbol is defined. The fundamental 'where is
+ this thing declared?' query."
+```
+
+### Input Schema (`inputSchema`)
+
+- Use `zod` to define schemas that match tsserver's `*RequestArgs` interfaces
+- Every parameter gets a `.describe()` with a clear, concise description
+- Use `.int().positive()` for line/offset numbers
+- Use `.optional().default(false)` for preview flags
+
+### Annotations
+
+Per the [MCP annotation specification](https://modelcontextprotocol.io/legacy/concepts/tools#available-tool-annotations):
+
+| Annotation              | When to use                                                                                    |
+| ----------------------- | ---------------------------------------------------------------------------------------------- |
+| `readOnlyHint: true`    | Tools that only read/query (all code intelligence tools)                                       |
+| `destructiveHint: true` | Tools that modify files (refactoring tools in non-preview mode)                                |
+| `idempotentHint: true`  | Tools where repeated calls with same args have no additional effect (e.g., `organize_imports`) |
+| `openWorldHint: false`  | All tools in this server (tsserver operates on local files only)                               |
+
+MCP best practice: _"Be accurate about side effects: Clearly indicate whether a tool modifies its environment and whether those modifications are destructive."_
+
+### Error Handling
+
+Per the [MCP error handling spec](https://modelcontextprotocol.io/legacy/concepts/tools#error-handling-2): _"Tool errors should be reported within the result object, not as MCP protocol-level errors. This allows the LLM to see and potentially handle the error."_
+
+Always return errors as tool results with `isError: true`:
+
+```typescript
+catch (err: unknown) {
+  return {
+    isError: true,
+    content: [
+      { type: "text", text: err instanceof Error ? err.message : String(err) },
+    ],
+  };
+}
+```
 
 ## Project Structure
 
@@ -105,7 +187,10 @@ export function register(server: McpServer): void {
         return {
           isError: true,
           content: [
-            { type: "text", text: err instanceof Error ? err.message : String(err) },
+            {
+              type: "text",
+              text: err instanceof Error ? err.message : String(err),
+            },
           ],
         };
       }
@@ -143,8 +228,8 @@ return applyRefactor(
     startOffset,
     endLine,
     endOffset,
-    refactor: "Extract Symbol",  // tsserver's refactor name
-    action: "function_scope_0",   // tsserver's action name
+    refactor: "Extract Symbol", // tsserver's refactor name
+    action: "function_scope_0", // tsserver's action name
   },
   preview,
 );
@@ -180,4 +265,6 @@ pnpm lint                   # ESLint with strict rules
 ❌ Pretty-print or format JSON output  
 ❌ Add metadata fields to responses  
 ❌ Create tools for things tsserver doesn't support natively  
-❌ Add heuristics or fallback logic when tsserver returns an error
+❌ Add heuristics or fallback logic when tsserver returns an error  
+❌ Copy tsserver TSDoc comments as tool descriptions  
+❌ Write descriptions for protocol developers instead of for LLMs
