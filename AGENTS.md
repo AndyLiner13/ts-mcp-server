@@ -173,7 +173,7 @@ ts-mcp-server/
 ├── tools/            # One file per tool, each exports register(server)
 │   ├── quickinfo.ts
 │   ├── definition.ts
-│   ├── extract-function.ts
+│   ├── extractFunction.ts
 │   └── ...
 ├── test-workspace/   # Test fixtures for manual testing
 └── README.md
@@ -183,7 +183,7 @@ ts-mcp-server/
 
 1. **Find the tsserver command** — Look in `node_modules/typescript/lib/typescript.d.ts` for `CommandTypes` and the associated `*Request`/`*Response` interfaces
 
-2. **Create the tool file** — `tools/{command-name}.ts`:
+2. **Create the tool file** — `tools/{toolName}.ts` (camelCase, matching the tool name exactly):
 
    The tool name must be the exact `CommandTypes` string value. Look it up:
 
