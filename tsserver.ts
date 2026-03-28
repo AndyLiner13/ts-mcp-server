@@ -72,7 +72,18 @@ function applyChanges(text: string, changes: readonly ts.TextChange[]): string {
   return text;
 }
 
-export function open(file: string): Promise<undefined> {
+// Track which files are already open in tsserver
+const openFiles = new Set<string>();
+
+export async function open(file: string): Promise<undefined> {
+  if (openFiles.has(file)) {
+    // File already open — reload from disk to pick up any changes
+    return send<undefined, ts.server.protocol.ReloadRequestArgs>(
+      ts.server.protocol.CommandTypes.Reload,
+      { file, tmpfile: file },
+    );
+  }
+  openFiles.add(file);
   return send<undefined, ts.server.protocol.FileRequestArgs>(
     ts.server.protocol.CommandTypes.Open,
     { file },
