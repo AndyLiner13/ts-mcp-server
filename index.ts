@@ -22,6 +22,7 @@ import { register as getCodeFixes } from "./tools/getCodeFixes.js";
 import { register as getDiagnostics } from "./tools/getDiagnostics.js";
 import { register as getMoveToRefactoringFileSuggestions } from "./tools/getMoveToRefactoringFileSuggestions.js";
 import { register as getOutliningSpans } from "./tools/getOutliningSpans.js";
+import { register as getSupportedCodeFixes } from "./tools/getSupportedCodeFixes.js";
 import { register as selectionRange } from "./tools/selectionRange.js";
 import { register as implementation } from "./tools/implementation.js";
 import { register as inferReturnType } from "./tools/inferReturnType.js";
@@ -85,6 +86,7 @@ findSourceDefinition(server);
 selectionRange(server);
 format(server);
 getMoveToRefactoringFileSuggestions(server);
+getSupportedCodeFixes(server);
 mapCode(server);
 
 const transport = new StdioServerTransport();

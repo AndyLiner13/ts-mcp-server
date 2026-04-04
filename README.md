@@ -4,7 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/ts-mcp-server)](https://www.npmjs.com/package/ts-mcp-server)
 [![license](https://img.shields.io/npm/l/ts-mcp-server)](./LICENSE)
 
-A lightweight [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for **TypeScript and JavaScript refactoring and code intelligence**. Every tool maps directly to a `tsserver` protocol command — the output is the raw, unmodified response from TypeScript's compiler. Rename symbols, extract functions, move declarations between files, reorganize imports, navigate type hierarchies, explore call graphs, search symbols across your workspace, map AI-generated code into the right locations, and more — with every `import`, `require`, re-export, and reference updated automatically across your entire codebase.
+A lightweight [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for **TypeScript and JavaScript refactoring and code intelligence**. Every tool maps directly to a `tsserver` protocol command — the output is the raw, unmodified response from TypeScript's compiler. Rename symbols, extract functions, move declarations between files, reorganize imports, navigate type hierarchies, explore call graphs, search symbols across your workspace, map AI-generated code into the right locations, discover which error codes have automatic fixes, and more — with every `import`, `require`, re-export, and reference updated automatically across your entire codebase.
 
 ## Why
 
@@ -14,7 +14,7 @@ AI coding assistants can read and write code, but they struggle with **structura
 
 ## Features
 
-- **39 tools** — each a 1:1 mapping to a native `tsserver` protocol command
+- **40 tools** — each a 1:1 mapping to a native `tsserver` protocol command
 
 ### Refactoring (14 tools)
 
@@ -33,6 +33,7 @@ AI coding assistants can read and write code, but they struggle with **structura
 - **Get diagnostics** — retrieve type errors, warnings, and suggestions for any file
 - **Find all references** — locate every usage of a symbol across the project
 - **Map code** — map AI-generated code snippets into a file, replacing matching declarations by name or appending new ones
+- **Get supported code fixes** — list every error code that has an available automatic fix, optionally scoped to a project
 
 ### Code Intelligence (24 tools)
 
@@ -94,6 +95,7 @@ Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over N
 | `inlineVariable`        | `getEditsForRefactor-full`                              |
 | `format`                | `format`                                                |
 | `mapCode`               | `mapCode`                                               |
+| `getSupportedCodeFixes` | `getSupportedCodeFixes`                                 |
 
 **Code intelligence tools:**
 
@@ -953,6 +955,26 @@ Get suggested target files when moving a symbol to another file. Returns both a 
 ```
 getMoveToRefactoringFileSuggestions  file="src/app.ts"  startLine=20  startOffset=1  endLine=35  endOffset=2
 getMoveToRefactoringFileSuggestions  file="src/components/Button.tsx"  startLine=1  startOffset=1  endLine=5  endOffset=2
+```
+
+---
+
+### `getSupportedCodeFixes`
+
+Returns the list of all error codes that have available automatic fixes. Use this as a discovery tool before calling `getCodeFixes` — it tells you which error codes tsserver can fix. Optionally scope the query to a specific file's project.
+
+| Parameter | Type     | Required | Description                                                                                  |
+| --------- | -------- | -------- | -------------------------------------------------------------------------------------------- |
+| `file`    | `string` | —        | Optional file path (absolute or relative to cwd). If provided, scopes to the file's project. |
+
+**Examples:**
+
+```
+# Get all fixable error codes globally
+getSupportedCodeFixes
+
+# Get fixable error codes scoped to a specific project
+getSupportedCodeFixes  file="src/app.ts"
 ```
 
 ---
