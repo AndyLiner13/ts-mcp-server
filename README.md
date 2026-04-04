@@ -1,5 +1,6 @@
 # ts-mcp-server
 
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0.2-blue)](https://www.typescriptlang.org/)
 [![npm version](https://img.shields.io/npm/v/ts-mcp-server)](https://www.npmjs.com/package/ts-mcp-server)
 [![npm downloads](https://img.shields.io/npm/dm/ts-mcp-server)](https://www.npmjs.com/package/ts-mcp-server)
 [![license](https://img.shields.io/npm/l/ts-mcp-server)](./LICENSE)
