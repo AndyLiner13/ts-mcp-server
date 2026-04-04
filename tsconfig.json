@@ -8,7 +8,8 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "declaration": true
+    "declaration": true,
+    "types": ["node"]
   },
   "include": ["index.ts", "tsserver.ts", "tools/**/*.ts"],
   "exclude": ["node_modules", "dist", "mcp-refactor-typescript"]

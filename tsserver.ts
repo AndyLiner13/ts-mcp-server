@@ -119,6 +119,52 @@ export async function writeEdits(
   return updated;
 }
 
+// ── Convert protocol edits (line/offset) to character offsets ─
+//
+// Some commands (like mapCode) don't have a -full variant, so they return
+// Location-based edits. This converts them for use with writeEdits.
+
+function lineOffsetToPosition(
+  text: string,
+  line: number,
+  offset: number,
+): number {
+  let pos = 0;
+  let currentLine = 1;
+  while (currentLine < line && pos < text.length) {
+    if (text[pos] === "\n") currentLine++;
+    pos++;
+  }
+  return pos + offset - 1; // offset is 1-based
+}
+
+export function convertProtocolEdits(
+  edits: readonly ts.server.protocol.FileCodeEdits[],
+): ts.FileTextChanges[] {
+  return edits.map((edit) => {
+    const content = readFileSync(edit.fileName, "utf-8");
+    return {
+      fileName: edit.fileName,
+      textChanges: edit.textChanges.map((change) => {
+        const start = lineOffsetToPosition(
+          content,
+          change.start.line,
+          change.start.offset,
+        );
+        const end = lineOffsetToPosition(
+          content,
+          change.end.line,
+          change.end.offset,
+        );
+        return {
+          span: { start, length: end - start },
+          newText: change.newText,
+        };
+      }),
+    };
+  });
+}
+
 // ── Refactor helper (shared by extractFunction, extractConstant,
 //    moveSymbol, inlineVariable, and any future refactor tools) ─
 //

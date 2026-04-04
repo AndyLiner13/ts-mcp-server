@@ -4,7 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/ts-mcp-server)](https://www.npmjs.com/package/ts-mcp-server)
 [![license](https://img.shields.io/npm/l/ts-mcp-server)](./LICENSE)
 
-A lightweight [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for **TypeScript and JavaScript refactoring and code intelligence**. Every tool maps directly to a `tsserver` protocol command — the output is the raw, unmodified response from TypeScript's compiler. Rename symbols, extract functions, move declarations between files, reorganize imports, navigate type hierarchies, explore call graphs, search symbols across your workspace, and more — with every `import`, `require`, re-export, and reference updated automatically across your entire codebase.
+A lightweight [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for **TypeScript and JavaScript refactoring and code intelligence**. Every tool maps directly to a `tsserver` protocol command — the output is the raw, unmodified response from TypeScript's compiler. Rename symbols, extract functions, move declarations between files, reorganize imports, navigate type hierarchies, explore call graphs, search symbols across your workspace, map AI-generated code into the right locations, and more — with every `import`, `require`, re-export, and reference updated automatically across your entire codebase.
 
 ## Why
 
@@ -14,7 +14,7 @@ AI coding assistants can read and write code, but they struggle with **structura
 
 ## Features
 
-- **38 tools** — each a 1:1 mapping to a native `tsserver` protocol command
+- **39 tools** — each a 1:1 mapping to a native `tsserver` protocol command
 
 ### Refactoring (14 tools)
 
@@ -32,6 +32,7 @@ AI coding assistants can read and write code, but they struggle with **structura
 - **Get combined code fix** — apply a fix-all action for a specific error code across a file
 - **Get diagnostics** — retrieve type errors, warnings, and suggestions for any file
 - **Find all references** — locate every usage of a symbol across the project
+- **Map code** — map AI-generated code snippets into a file, replacing matching declarations by name or appending new ones
 
 ### Code Intelligence (24 tools)
 
@@ -92,6 +93,7 @@ Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over N
 | `moveSymbol`            | `getEditsForRefactor-full`                              |
 | `inlineVariable`        | `getEditsForRefactor-full`                              |
 | `format`                | `format`                                                |
+| `mapCode`               | `mapCode`                                               |
 
 **Code intelligence tools:**
 
@@ -953,6 +955,46 @@ getMoveToRefactoringFileSuggestions  file="src/app.ts"  startLine=20  startOffse
 getMoveToRefactoringFileSuggestions  file="src/components/Button.tsx"  startLine=1  startOffset=1  endLine=5  endOffset=2
 ```
 
+---
+
+### `mapCode`
+
+Map AI-generated code snippets into a file, replacing matching declarations by name or appending new ones. Designed for AI code generation workflows where you want to merge new code into an existing file without duplicating declarations.
+
+| Parameter        | Type         | Required | Description                                                                                                                                           |
+| ---------------- | ------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `file`           | `string`     | ✅       | File path (absolute or relative to cwd)                                                                                                               |
+| `contents`       | `string[]`   | ✅       | Code snippets to map into the file. Each is parsed independently. Functions and classes are matched by name.                                          |
+| `focusLocations` | `object[][]` | —        | Nested arrays of `{start, end}` spans (1-based line/offset) used to enable name-based matching. Without this, code is always appended to end of file. |
+| `preview`        | `boolean`    | —        | If `true`, return changes without applying. Default: `false`                                                                                          |
+
+**How matching works:**
+
+- **Without `focusLocations`** → code is always appended to end of file (no matching attempted)
+- **With `focusLocations`** → TypeScript searches for declarations with matching names in the pointed-to scope
+- **Matching works for:** functions, classes, methods, interfaces (nodes with a `.name` property)
+- **Matching does NOT work for:** `const`/`let`/`var` declarations (`VariableStatement` has no `.name`)
+- When a match is found, the range from first to last matching statement is replaced
+- When no match is found, code is appended to the end of the scope
+
+**Limitations:**
+
+- Calling with multiple `contents` entries only applies the first match — call once per declaration to replace multiple
+- `const`/`let`/`var` replacements are not supported; use standard file editing instead
+
+**Examples:**
+
+```
+# Replace an existing function (focusLocations enables name-based matching)
+mapCode  file="src/utils.ts"  contents=["export function add(a: number, b: number, c = 0) { return a + b + c; }"]  focusLocations=[[{"start":{"line":1,"offset":1},"end":{"line":1,"offset":1}}]]
+
+# Append a new function (no focusLocations — always appends)
+mapCode  file="src/utils.ts"  contents=["export function multiply(a: number, b: number) { return a * b; }"]
+
+# Preview before applying
+mapCode  file="src/utils.ts"  contents=["export function add(a: number, b: number) { return a + b; }"]  focusLocations=[[{"start":{"line":1,"offset":1},"end":{"line":1,"offset":1}}]]  preview=true
+```
+
 ## Supported Languages & Frameworks
 
 `ts-mcp-server` works with any project that TypeScript's language service understands:
@@ -975,7 +1017,7 @@ If your project has a `tsconfig.json` (or `jsconfig.json`), it works.
 | Requirement    | Version                                       |
 | -------------- | --------------------------------------------- |
 | **Node.js**    | 22 or later (current LTS)                     |
-| **TypeScript** | 5.x (installed automatically as a dependency) |
+| **TypeScript** | 6.x (installed automatically as a dependency) |
 | **OS**         | Windows, macOS, Linux                         |
 
 No additional dependencies or global tools are required. The server bundles everything it needs.

@@ -14,6 +14,7 @@ import { register as extractType } from "./tools/extractType.js";
 import { register as fileReferences } from "./tools/fileReferences.js";
 import { register as findSourceDefinition } from "./tools/findSourceDefinition.js";
 import { register as format } from "./tools/format.js";
+import { register as mapCode } from "./tools/mapCode.js";
 import { register as references } from "./tools/references.js";
 import { register as getApplicableRefactors } from "./tools/getApplicableRefactors.js";
 import { register as getCombinedCodeFix } from "./tools/getCombinedCodeFix.js";
@@ -84,6 +85,7 @@ findSourceDefinition(server);
 selectionRange(server);
 format(server);
 getMoveToRefactoringFileSuggestions(server);
+mapCode(server);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
