@@ -1,6 +1,6 @@
 {
   "name": "ts-mcp-server",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "MCP server that renames/moves TypeScript files and updates all imports via tsserver",
   "type": "module",
   "bin": {
