@@ -224,7 +224,7 @@ Rename a TypeScript/JavaScript symbol and update all references across the proje
 | `line`    | `number`  | ✅       | 1-based line number where the symbol appears                  |
 | `offset`  | `number`  | ✅       | 1-based character offset on the line                          |
 | `newName` | `string`  | ✅       | New name for the symbol                                       |
-| `preview` | `boolean` | —        | If `true`, return changes without applying. Default: `false`  |
+| `preview` | `boolean` | ✅       | If `true`, return changes without applying                    |
 
 **Examples:**
 
@@ -245,7 +245,7 @@ Rename or move a TypeScript/JavaScript file or directory and update all import p
 | --------- | --------- | -------- | ------------------------------------------------------------ |
 | `from`    | `string`  | ✅       | Current file or directory path (absolute or relative to cwd) |
 | `to`      | `string`  | ✅       | New file or directory path (absolute or relative to cwd)     |
-| `preview` | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+| `preview` | `boolean` | ✅       | If `true`, return changes without applying                   |
 
 **Examples:**
 
@@ -300,10 +300,10 @@ getDiagnostics  file="src/components/Button.tsx"
 
 Sort, coalesce, and remove unused imports in a file.
 
-| Parameter | Type      | Required | Description                                                  |
-| --------- | --------- | -------- | ------------------------------------------------------------ |
-| `file`    | `string`  | ✅       | File path (absolute or relative to cwd)                      |
-| `preview` | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+| Parameter | Type      | Required | Description                                |
+| --------- | --------- | -------- | ------------------------------------------ |
+| `file`    | `string`  | ✅       | File path (absolute or relative to cwd)    |
+| `preview` | `boolean` | ✅       | If `true`, return changes without applying |
 
 **Examples:**
 
@@ -364,14 +364,14 @@ getCombinedCodeFix  file="src/app.ts"  fixId="unusedIdentifier"
 
 Extract a selected code range into a new function. TypeScript auto-detects parameters and return type. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename` to give the function a meaningful name.
 
-| Parameter     | Type      | Required | Description                                                  |
-| ------------- | --------- | -------- | ------------------------------------------------------------ |
-| `file`        | `string`  | ✅       | File path (absolute or relative to cwd)                      |
-| `startLine`   | `number`  | ✅       | 1-based start line of the selection                          |
-| `startOffset` | `number`  | ✅       | 1-based start character offset                               |
-| `endLine`     | `number`  | ✅       | 1-based end line of the selection                            |
-| `endOffset`   | `number`  | ✅       | 1-based end character offset                                 |
-| `preview`     | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+| Parameter     | Type      | Required | Description                                |
+| ------------- | --------- | -------- | ------------------------------------------ |
+| `file`        | `string`  | ✅       | File path (absolute or relative to cwd)    |
+| `startLine`   | `number`  | ✅       | 1-based start line of the selection        |
+| `startOffset` | `number`  | ✅       | 1-based start character offset             |
+| `endLine`     | `number`  | ✅       | 1-based end line of the selection          |
+| `endOffset`   | `number`  | ✅       | 1-based end character offset               |
+| `preview`     | `boolean` | ✅       | If `true`, return changes without applying |
 
 **Examples:**
 
@@ -389,14 +389,14 @@ extractFunction  file="src/app.ts"  startLine=10  startOffset=1  endLine=15  end
 
 Extract a selected expression into a named constant. TypeScript infers the type. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename` to give the constant a meaningful name.
 
-| Parameter     | Type      | Required | Description                                                  |
-| ------------- | --------- | -------- | ------------------------------------------------------------ |
-| `file`        | `string`  | ✅       | File path (absolute or relative to cwd)                      |
-| `startLine`   | `number`  | ✅       | 1-based start line of the expression                         |
-| `startOffset` | `number`  | ✅       | 1-based start character offset                               |
-| `endLine`     | `number`  | ✅       | 1-based end line of the expression                           |
-| `endOffset`   | `number`  | ✅       | 1-based end character offset                                 |
-| `preview`     | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+| Parameter     | Type      | Required | Description                                |
+| ------------- | --------- | -------- | ------------------------------------------ |
+| `file`        | `string`  | ✅       | File path (absolute or relative to cwd)    |
+| `startLine`   | `number`  | ✅       | 1-based start line of the expression       |
+| `startOffset` | `number`  | ✅       | 1-based start character offset             |
+| `endLine`     | `number`  | ✅       | 1-based end line of the expression         |
+| `endOffset`   | `number`  | ✅       | 1-based end character offset               |
+| `preview`     | `boolean` | ✅       | If `true`, return changes without applying |
 
 **Examples:**
 
@@ -414,15 +414,15 @@ extractConstant  file="src/app.ts"  startLine=8  startOffset=12  endLine=8  endO
 
 Move top-level declarations (functions, classes, types, constants) to another file. All imports across the project are rewired automatically. If the target file doesn't exist, tsserver creates it.
 
-| Parameter     | Type      | Required | Description                                                  |
-| ------------- | --------- | -------- | ------------------------------------------------------------ |
-| `file`        | `string`  | ✅       | Source file path (absolute or relative to cwd)               |
-| `startLine`   | `number`  | ✅       | 1-based start line of the declaration                        |
-| `startOffset` | `number`  | ✅       | 1-based start character offset                               |
-| `endLine`     | `number`  | ✅       | 1-based end line of the declaration                          |
-| `endOffset`   | `number`  | ✅       | 1-based end character offset                                 |
-| `targetFile`  | `string`  | ✅       | Destination file path (absolute or relative to cwd)          |
-| `preview`     | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+| Parameter     | Type      | Required | Description                                         |
+| ------------- | --------- | -------- | --------------------------------------------------- |
+| `file`        | `string`  | ✅       | Source file path (absolute or relative to cwd)      |
+| `startLine`   | `number`  | ✅       | 1-based start line of the declaration               |
+| `startOffset` | `number`  | ✅       | 1-based start character offset                      |
+| `endLine`     | `number`  | ✅       | 1-based end line of the declaration                 |
+| `endOffset`   | `number`  | ✅       | 1-based end character offset                        |
+| `targetFile`  | `string`  | ✅       | Destination file path (absolute or relative to cwd) |
+| `preview`     | `boolean` | ✅       | If `true`, return changes without applying          |
 
 **Examples:**
 
@@ -443,12 +443,12 @@ moveSymbol  file="src/app.ts"  startLine=20  startOffset=1  endLine=35  endOffse
 
 Inline a variable — replace all references with the variable's initializer and delete the declaration. Position must be on the variable name in its declaration or any usage.
 
-| Parameter | Type      | Required | Description                                                  |
-| --------- | --------- | -------- | ------------------------------------------------------------ |
-| `file`    | `string`  | ✅       | File path (absolute or relative to cwd)                      |
-| `line`    | `number`  | ✅       | 1-based line number of the variable                          |
-| `offset`  | `number`  | ✅       | 1-based character offset on the line                         |
-| `preview` | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+| Parameter | Type      | Required | Description                                |
+| --------- | --------- | -------- | ------------------------------------------ |
+| `file`    | `string`  | ✅       | File path (absolute or relative to cwd)    |
+| `line`    | `number`  | ✅       | 1-based line number of the variable        |
+| `offset`  | `number`  | ✅       | 1-based character offset on the line       |
+| `preview` | `boolean` | ✅       | If `true`, return changes without applying |
 
 **Examples:**
 
@@ -466,14 +466,14 @@ inlineVariable  file="src/app.ts"  line=12  offset=7  preview=true
 
 Extract an inline type annotation into a named type alias. Select the type span to extract. The response includes `renameFilename` / `renameLocation` so you can follow up with `rename` to give the type a meaningful name.
 
-| Parameter     | Type      | Required | Description                                                  |
-| ------------- | --------- | -------- | ------------------------------------------------------------ |
-| `file`        | `string`  | ✅       | File path (absolute or relative to cwd)                      |
-| `startLine`   | `number`  | ✅       | 1-based start line of the type span                          |
-| `startOffset` | `number`  | ✅       | 1-based start character offset                               |
-| `endLine`     | `number`  | ✅       | 1-based end line of the type span                            |
-| `endOffset`   | `number`  | ✅       | 1-based end character offset                                 |
-| `preview`     | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+| Parameter     | Type      | Required | Description                                |
+| ------------- | --------- | -------- | ------------------------------------------ |
+| `file`        | `string`  | ✅       | File path (absolute or relative to cwd)    |
+| `startLine`   | `number`  | ✅       | 1-based start line of the type span        |
+| `startOffset` | `number`  | ✅       | 1-based start character offset             |
+| `endLine`     | `number`  | ✅       | 1-based end line of the type span          |
+| `endOffset`   | `number`  | ✅       | 1-based end character offset               |
+| `preview`     | `boolean` | ✅       | If `true`, return changes without applying |
 
 **Examples:**
 
@@ -493,12 +493,12 @@ extractType  file="src/app.ts"  startLine=5  startOffset=26  endLine=5  endOffse
 
 Add an explicit return type annotation to a function, inferred by TypeScript. Position must be on the function name or declaration keyword (`function`, `async`, arrow function variable name).
 
-| Parameter | Type      | Required | Description                                                  |
-| --------- | --------- | -------- | ------------------------------------------------------------ |
-| `file`    | `string`  | ✅       | File path (absolute or relative to cwd)                      |
-| `line`    | `number`  | ✅       | 1-based line number of the function                          |
-| `offset`  | `number`  | ✅       | 1-based character offset on the line                         |
-| `preview` | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+| Parameter | Type      | Required | Description                                |
+| --------- | --------- | -------- | ------------------------------------------ |
+| `file`    | `string`  | ✅       | File path (absolute or relative to cwd)    |
+| `line`    | `number`  | ✅       | 1-based line number of the function        |
+| `offset`  | `number`  | ✅       | 1-based character offset on the line       |
+| `preview` | `boolean` | ✅       | If `true`, return changes without applying |
 
 **Examples:**
 
@@ -961,15 +961,15 @@ selectionRange  file="src/app.ts"  locations=[{"line":10,"offset":5},{"line":20,
 
 Format a range of code according to TypeScript's formatting rules. Applies consistent indentation, spacing, and line breaks.
 
-| Parameter   | Type      | Required | Description                                                  |
-| ----------- | --------- | -------- | ------------------------------------------------------------ |
-| `file`      | `string`  | ✅       | File path (absolute or relative to cwd)                      |
-| `line`      | `number`  | ✅       | 1-based start line of the range                              |
-| `offset`    | `number`  | ✅       | 1-based start character offset                               |
-| `endLine`   | `number`  | ✅       | 1-based end line of the range                                |
-| `endOffset` | `number`  | ✅       | 1-based end character offset                                 |
-| `options`   | `object`  | —        | Formatting options (tabSize, indentSize, etc.)               |
-| `preview`   | `boolean` | —        | If `true`, return changes without applying. Default: `false` |
+| Parameter   | Type      | Required | Description                                    |
+| ----------- | --------- | -------- | ---------------------------------------------- |
+| `file`      | `string`  | ✅       | File path (absolute or relative to cwd)        |
+| `line`      | `number`  | ✅       | 1-based start line of the range                |
+| `offset`    | `number`  | ✅       | 1-based start character offset                 |
+| `endLine`   | `number`  | ✅       | 1-based end line of the range                  |
+| `endOffset` | `number`  | ✅       | 1-based end character offset                   |
+| `options`   | `object`  | —        | Formatting options (tabSize, indentSize, etc.) |
+| `preview`   | `boolean` | ✅       | If `true`, return changes without applying     |
 
 **Examples:**
 
@@ -1031,7 +1031,7 @@ Map AI-generated code snippets into a file, replacing matching declarations by n
 | `file`           | `string`     | ✅       | File path (absolute or relative to cwd)                                                                                                               |
 | `contents`       | `string[]`   | ✅       | Code snippets to map into the file. Each is parsed independently. Functions and classes are matched by name.                                          |
 | `focusLocations` | `object[][]` | —        | Nested arrays of `{start, end}` spans (1-based line/offset) used to enable name-based matching. Without this, code is always appended to end of file. |
-| `preview`        | `boolean`    | —        | If `true`, return changes without applying. Default: `false`                                                                                          |
+| `preview`        | `boolean`    | ✅       | If `true`, return changes without applying                                                                                                            |
 
 **How matching works:**
 

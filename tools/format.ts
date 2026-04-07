@@ -53,11 +53,7 @@ or use the full file length to format the entire file.`,
           })
           .optional()
           .describe("Formatting options"),
-        preview: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe("If true, return edits without applying"),
+        preview: z.boolean().describe("If true, return edits without applying"),
       }),
     },
     async ({

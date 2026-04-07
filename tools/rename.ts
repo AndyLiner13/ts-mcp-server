@@ -21,11 +21,7 @@ export function register(server: McpServer): void {
           .positive()
           .describe("1-based character offset on the line"),
         newName: z.string().describe("New name for the symbol"),
-        preview: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe("If true, only preview changes"),
+        preview: z.boolean().describe("If true, only preview changes"),
       }),
     },
     async ({

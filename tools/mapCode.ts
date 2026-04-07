@@ -93,8 +93,6 @@ Set preview=true to see edits without applying them.`,
           ),
         preview: z
           .boolean()
-          .optional()
-          .default(false)
           .describe("If true, return edits without applying them"),
       }),
     },

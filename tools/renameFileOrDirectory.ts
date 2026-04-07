@@ -24,8 +24,6 @@ export function register(server: McpServer): void {
           .describe("New file or folder path (absolute or relative to cwd)"),
         preview: z
           .boolean()
-          .optional()
-          .default(false)
           .describe(
             "If true, show what would change without applying anything",
           ),

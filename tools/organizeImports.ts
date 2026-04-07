@@ -18,11 +18,7 @@ export function register(server: McpServer): void {
       },
       inputSchema: z.object({
         file: z.string().describe("File path (absolute or relative to cwd)"),
-        preview: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe("If true, only preview changes"),
+        preview: z.boolean().describe("If true, only preview changes"),
       }),
     },
     async ({ file, preview }): Promise<CallToolResult> => {

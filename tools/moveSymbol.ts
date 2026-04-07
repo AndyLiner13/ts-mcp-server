@@ -30,11 +30,7 @@ export function register(server: McpServer): void {
         targetFile: z
           .string()
           .describe("Destination file path (absolute or relative to cwd)"),
-        preview: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe("If true, only preview changes"),
+        preview: z.boolean().describe("If true, only preview changes"),
       }),
     },
     async ({
