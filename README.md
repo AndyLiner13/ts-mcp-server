@@ -170,6 +170,48 @@ Add `ts-mcp-server` to your client's MCP configuration.
 
 **Cursor, Windsurf, Continue** — follow each client's MCP server documentation using the same `npx ts-mcp-server` command.
 
+### Disabling Individual Tools
+
+Every tool can be disabled individually by setting its name to `"false"` in the `env` block of your MCP configuration. Tools are enabled by default; only tools explicitly set to `"false"` are skipped at startup.
+
+**VS Code** (`.vscode/mcp.json`):
+
+```json
+{
+  "servers": {
+    "ts-mcp-server": {
+      "command": "npx",
+      "args": ["ts-mcp-server"],
+      "env": {
+        "todoComments": "false",
+        "getOutliningSpans": "false",
+        "docCommentTemplate": "false"
+      }
+    }
+  }
+}
+```
+
+**Claude Desktop** (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "ts-mcp-server": {
+      "command": "npx",
+      "args": ["ts-mcp-server"],
+      "env": {
+        "todoComments": "false",
+        "getOutliningSpans": "false",
+        "docCommentTemplate": "false"
+      }
+    }
+  }
+}
+```
+
+The tool name in `env` must exactly match the tool name as listed in the [Tool Reference](#tool-reference) below (e.g., `"quickinfo"`, `"getDiagnostics"`, `"extractFunction"`). Any other value — including omitting the key entirely — leaves the tool enabled.
+
 ## Tool Reference
 
 ### `rename`

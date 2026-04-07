@@ -43,51 +43,56 @@ import { register as signatureHelp } from "./tools/signatureHelp.js";
 import { register as todoComments } from "./tools/todoComments.js";
 import { register as typeDefinition } from "./tools/typeDefinition.js";
 
+const isEnabled = (name: string): boolean => process.env[name] !== "false";
+
 const server = new McpServer({
   name: "ts-mcp-server",
   version: "1.0.0",
 });
 
-renameFileOrDirectory(server);
-rename(server);
-getDiagnostics(server);
-references(server);
-organizeImports(server);
-getCodeFixes(server);
-extractFunction(server);
-extractConstant(server);
-moveSymbol(server);
-inlineVariable(server);
-extractType(server);
-inferReturnType(server);
-quickinfo(server);
-navtree(server);
-definition(server);
-navto(server);
-fileReferences(server);
-prepareCallHierarchy(server);
-provideCallHierarchyIncomingCalls(server);
-provideCallHierarchyOutgoingCalls(server);
-typeDefinition(server);
-implementation(server);
-projectInfo(server);
-completionInfo(server);
-completionEntryDetails(server);
-signatureHelp(server);
-documentHighlights(server);
-getApplicableRefactors(server);
-docCommentTemplate(server);
-getOutliningSpans(server);
-provideInlayHints(server);
-getCombinedCodeFix(server);
-todoComments(server);
-definitionAndBoundSpan(server);
-findSourceDefinition(server);
-selectionRange(server);
-format(server);
-getMoveToRefactoringFileSuggestions(server);
-getSupportedCodeFixes(server);
-mapCode(server);
+if (isEnabled("renameFileOrDirectory")) renameFileOrDirectory(server);
+if (isEnabled("rename")) rename(server);
+if (isEnabled("getDiagnostics")) getDiagnostics(server);
+if (isEnabled("references")) references(server);
+if (isEnabled("organizeImports")) organizeImports(server);
+if (isEnabled("getCodeFixes")) getCodeFixes(server);
+if (isEnabled("extractFunction")) extractFunction(server);
+if (isEnabled("extractConstant")) extractConstant(server);
+if (isEnabled("moveSymbol")) moveSymbol(server);
+if (isEnabled("inlineVariable")) inlineVariable(server);
+if (isEnabled("extractType")) extractType(server);
+if (isEnabled("inferReturnType")) inferReturnType(server);
+if (isEnabled("quickinfo")) quickinfo(server);
+if (isEnabled("navtree")) navtree(server);
+if (isEnabled("definition")) definition(server);
+if (isEnabled("navto")) navto(server);
+if (isEnabled("fileReferences")) fileReferences(server);
+if (isEnabled("prepareCallHierarchy")) prepareCallHierarchy(server);
+if (isEnabled("provideCallHierarchyIncomingCalls"))
+  provideCallHierarchyIncomingCalls(server);
+if (isEnabled("provideCallHierarchyOutgoingCalls"))
+  provideCallHierarchyOutgoingCalls(server);
+if (isEnabled("typeDefinition")) typeDefinition(server);
+if (isEnabled("implementation")) implementation(server);
+if (isEnabled("projectInfo")) projectInfo(server);
+if (isEnabled("completionInfo")) completionInfo(server);
+if (isEnabled("completionEntryDetails")) completionEntryDetails(server);
+if (isEnabled("signatureHelp")) signatureHelp(server);
+if (isEnabled("documentHighlights")) documentHighlights(server);
+if (isEnabled("getApplicableRefactors")) getApplicableRefactors(server);
+if (isEnabled("docCommentTemplate")) docCommentTemplate(server);
+if (isEnabled("getOutliningSpans")) getOutliningSpans(server);
+if (isEnabled("provideInlayHints")) provideInlayHints(server);
+if (isEnabled("getCombinedCodeFix")) getCombinedCodeFix(server);
+if (isEnabled("todoComments")) todoComments(server);
+if (isEnabled("definitionAndBoundSpan")) definitionAndBoundSpan(server);
+if (isEnabled("findSourceDefinition")) findSourceDefinition(server);
+if (isEnabled("selectionRange")) selectionRange(server);
+if (isEnabled("format")) format(server);
+if (isEnabled("getMoveToRefactoringFileSuggestions"))
+  getMoveToRefactoringFileSuggestions(server);
+if (isEnabled("getSupportedCodeFixes")) getSupportedCodeFixes(server);
+if (isEnabled("mapCode")) mapCode(server);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
