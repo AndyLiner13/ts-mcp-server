@@ -12,7 +12,7 @@ export function register(server: McpServer): void {
     {
       title: "Rename / Move File or Folder",
       description:
-        "Rename or move a TypeScript/JavaScript file OR folder and automatically update all import paths across the project. Supports .ts, .tsx, .js, .jsx. tsserver auto-discovers the relevant tsconfig.json. For folders, all imports referencing files inside the folder are updated.",
+        "Rename or move a TypeScript/JavaScript file OR folder and automatically update all import paths across the project. Supports .ts, .tsx, .js, .jsx. tsserver auto-discovers the relevant tsconfig.json. For folders, all imports referencing files inside the folder are updated. Successful moves return full edits by default; summary mode returns success, from, to, and updatedFileCount. Previews always return full edits.",
       inputSchema: z.object({
         from: z
           .string()
@@ -27,9 +27,15 @@ export function register(server: McpServer): void {
           .describe(
             "If true, show what would change without applying anything",
           ),
+        responseMode: z
+          .enum(["full", "summary"])
+          .optional()
+          .describe(
+            "Response after applying changes. Overrides TS_MCP_RESPONSE_MODE (default: full). Previews always return full edits.",
+          ),
       }),
     },
-    async ({ from, to, preview }): Promise<CallToolResult> => {
+    async ({ from, to, preview, responseMode }): Promise<CallToolResult> => {
       try {
         const oldPath: string = resolve(from);
         const newPath: string = resolve(to);
@@ -68,7 +74,16 @@ export function register(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: JSON.stringify({ edits, updatedFiles: updated }),
+              text: JSON.stringify(
+                (responseMode ?? process.env.TS_MCP_RESPONSE_MODE) === "summary"
+                  ? {
+                      success: true,
+                      from: oldPath,
+                      to: newPath,
+                      updatedFileCount: updated.length,
+                    }
+                  : { edits, updatedFiles: updated },
+              ),
             },
           ],
         };

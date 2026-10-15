@@ -12,6 +12,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint index.ts tsserver.ts tools/",
+    "test": "pnpm build && node --test tests/*.test.mjs",
     "start": "node dist/index.js",
     "prepublishOnly": "tsc",
     "publish": "npm publish --access public",

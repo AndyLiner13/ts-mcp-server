@@ -65,7 +65,7 @@ AI coding assistants can read and write code, but they struggle with **structura
 
 ### Design Principles
 
-- **Pure tsserver output** — every tool returns the raw, unmodified `tsserver` response as JSON
+- **Pure tsserver output by default** — raw `tsserver` responses as JSON; file moves also support an [opt-in summary](docs/file-move-response.md) after applying changes
 - **Preview mode** — see exactly what would change before applying anything
 - **Automatic project discovery** — `tsconfig.json` is detected automatically; no configuration needed
 - **Multi-project support** — monorepos, project references, and composite builds work out of the box
@@ -76,7 +76,7 @@ AI coding assistants can read and write code, but they struggle with **structura
 Under the hood, `ts-mcp-server` communicates with TypeScript's `tsserver` over Node IPC — the same protocol that VS Code uses. Every tool is a thin wrapper that:
 
 1. Passes your input directly to a `tsserver` protocol command
-2. Returns the raw response — no formatting, no grouping, no filtering
+2. Returns the raw response by default — file moves can optionally return a summary after applying changes
 
 **Refactoring tools:**
 
